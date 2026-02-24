@@ -1,0 +1,123 @@
+# =============================================================================
+# Exemple de déploiement Kubernetes avec sidecar Nginx TLS
+# =============================================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myapp
+  labels:
+    app: myapp
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: myapp
+  template:
+    metadata:
+      labels:
+        app: myapp
+    spec:
+      # Pas de root pour tout le pod
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+
+      # ---------------------------------------------------------------
+      # InitContainer : génération du certificat TLS self-signed
+      # S'exécute AVANT le sidecar nginx
+      # ---------------------------------------------------------------
+      initContainers:
+        - name: tls-cert-generator
+          image: alpine/openssl:latest
+          command:
+            - sh
+            - -c
+            - |
+              echo "Génération du certificat TLS self-signed..."
+              openssl req -x509 -nodes -days 365 \
+                -newkey rsa:2048 \
+                -keyout /certs/tls.key \
+                -out /certs/tls.crt \
+                -subj "/CN=myapp.default.svc.cluster.local/O=myapp" \
+                -addext "subjectAltName=DNS:myapp.default.svc.cluster.local,DNS:localhost"
+              chmod 400 /certs/tls.key
+              chmod 444 /certs/tls.crt
+              echo "Certificat généré avec succès."
+              ls -la /certs/
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: false   # openssl a besoin d'écrire tmp
+            runAsUser: 1001
+            runAsGroup: 1001
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - name: tls-certs
+              mountPath: /certs
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "32Mi"
+            limits:
+              cpu: "100m"
+              memory: "64Mi"
+
+      containers:
+        # ---------------------------------------------------------------
+        # Sidecar Nginx — TLS termination
+        # ---------------------------------------------------------------
+        - name: nginx-sidecar
+          image: myregistry/nginx-sidecar:1.0.0
+          ports:
+            - containerPort: 8443
+              name: https
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsUser: 1001
+            runAsGroup: 1001
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - name: tls-certs
+              mountPath: /etc/nginx/certs
+              readOnly: true
+            - name: nginx-tmp
+              mountPath: /var/cache/nginx
+            - name: nginx-run
+              mountPath: /var/run
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "64Mi"
+            limits:
+              cpu: "200m"
+              memory: "128Mi"
+
+      volumes:
+        # Volume partagé entre initContainer et sidecar nginx
+        # Remplace le Secret statique — les certs sont générés dynamiquement
+        - name: tls-certs
+          emptyDir:
+            medium: Memory    # stockage en RAM, jamais écrit sur disque
+        - name: nginx-tmp
+          emptyDir: {}
+        - name: nginx-run
+          emptyDir: {}
+
+---
+# =============================================================================
+# Service exposant le sidecar
+# =============================================================================
+apiVersion: v1
+kind: Service
+metadata:
+  name: myapp-svc
+spec:
+  selector:
+    app: myapp
+  ports:
+    - name: https
+      port: 443
+      targetPort: 8443
