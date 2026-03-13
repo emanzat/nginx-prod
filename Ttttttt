@@ -1,0 +1,10 @@
+resource "null_resource" "debug_group" {
+  provisioner "local-exec" {
+    command = <<EOT
+echo "var.group = ${var.group}"
+echo "group_id = ${data.gitlab_group.target.id}"
+echo "group_full_path = ${data.gitlab_group.target.full_path}"
+echo "group_name = ${data.gitlab_group.target.name}"
+EOT
+  }
+}
