@@ -1,0 +1,31 @@
+resource "gitlab_project" "project" {
+  name                   = var.project_name
+  namespace_id           = var.namespace_id
+  initialize_with_readme = true
+}
+
+resource "gitlab_branch_protection" "branch" {
+  for_each = { for k, v in data.gitlab_project_branches.source_branches : k => v }
+
+  project                = gitlab_project.project.id
+  branch                 = each.value.name
+  push_access_level      = var.push_access_level
+  merge_access_level     = var.merge_access_level
+  unprotect_access_level = var.unprotect_access_level
+}
+
+resource "gitlab_repository_file" "template_file" {
+  for_each = { for k, v in local.template_files : k => v }
+
+  project        = gitlab_project.project.id
+  file_path      = each.value.file_name
+  branch         = each.value.branch
+  content        = each.value.file_content
+  commit_message = "initialize ${each.value.file_name} file"
+
+  lifecycle {
+    ignore_changes = [content]
+  }
+
+  depends_on = [gitlab_branch_protection.branch]
+}
