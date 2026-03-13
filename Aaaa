@@ -21,3 +21,8 @@ EOT
     }
   }
 }
+
+
+- export TF_LOG=DEBUG
+- terraform plan -lock=false 2>&1 | grep -i "token\|auth\|401"
+
