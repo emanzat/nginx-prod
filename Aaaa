@@ -1,0 +1,23 @@
+resource "null_resource" "wait_for_import" {
+  depends_on = [gitlab_project.project]
+
+  provisioner "local-exec" {
+    command = <<EOT
+for i in $(seq 1 30); do
+  STATUS=$(curl --silent --header "PRIVATE-TOKEN: $GITLAB_TOKEN" \
+    "${var.gitlab_url}/api/v4/projects/${gitlab_project.project.id}" \
+    | jq -r '.import_status')
+  echo "Import status: $STATUS (attempt $i/30)"
+  if [ "$STATUS" = "finished" ] || [ "$STATUS" = "none" ]; then
+    exit 0
+  fi
+  sleep 10
+done
+echo "ERROR: Import did not complete in time"
+exit 1
+EOT
+    environment = {
+      GITLAB_TOKEN = var.gitlab_token
+    }
+  }
+}
