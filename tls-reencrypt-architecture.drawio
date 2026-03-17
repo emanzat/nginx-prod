@@ -1,0 +1,286 @@
+<mxfile host="app.diagrams.net" modified="2026-03-17T10:00:00.000Z" agent="Claude" version="24.0.0" type="device">
+  <diagram id="tls-reencrypt-vault-pki" name="TLS Reencrypt - Vault PKI - Full Lifecycle">
+    <mxGraphModel dx="2200" dy="1600" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="3000" pageHeight="2000" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- ==================== TITLE ==================== -->
+        <mxCell id="title1" value="&lt;font style=&quot;font-size:22px;font-weight:bold;color:#00965E;&quot;&gt;Architecture TLS Reencrypt — Vault PKI &amp; Certificate Lifecycle&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="550" y="20" width="700" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="title2" value="&lt;font style=&quot;font-size:12px;color:#666;&quot;&gt;OpenShift Reencrypt Route │ Vault PKI Engine │ Init Containers │ Sidecar Nginx │ CronJob Auto-Renewal&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="550" y="55" width="700" height="30" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== EXTERNAL CLIENT ==================== -->
+        <mxCell id="client" value="&lt;b&gt;Client Externe&lt;/b&gt;&lt;br&gt;(Browser / API Consumer)" style="shape=actor;whiteSpace=wrap;html=1;fillColor=#E8F5E9;strokeColor=#00965E;fontColor=#333;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="60" y="280" width="120" height="100" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== OPENSHIFT ROUTER ==================== -->
+        <mxCell id="router_group" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF3E0;strokeColor=#E65100;strokeWidth=2;dashed=0;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="260" y="220" width="200" height="220" as="geometry" />
+        </mxCell>
+        <mxCell id="router_title" value="&lt;font style=&quot;font-size:13px;font-weight:bold;color:#E65100;&quot;&gt;OpenShift HAProxy Router&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=top;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="275" y="228" width="175" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="route_obj" value="&lt;b&gt;Route Reencrypt&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#555;&quot;&gt;spec.tls.termination: reencrypt&lt;br&gt;spec.tls.certificate: &lt;i&gt;route cert&lt;/i&gt;&lt;br&gt;spec.tls.key: &lt;i&gt;route key&lt;/i&gt;&lt;br&gt;spec.tls.caCertificate: &lt;i&gt;route CA&lt;/i&gt;&lt;br&gt;spec.tls.destinationCACert: &lt;i&gt;pod CA&lt;/i&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF;strokeColor=#E65100;fontSize=10;align=left;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="275" y="265" width="175" height="115" as="geometry" />
+        </mxCell>
+        <mxCell id="router_note" value="&lt;font style=&quot;font-size:9px;color:#E65100;&quot;&gt;TLS Termination + Re-encryption&lt;br&gt;vers le backend Nginx (HTTPS)&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="280" y="390" width="170" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== ARROWS CLIENT -> ROUTER ==================== -->
+        <mxCell id="arrow_client_router" value="&lt;font style=&quot;font-size:10px;color:#00965E;&quot;&gt;HTTPS&lt;br&gt;(Route Cert)&lt;/font&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;exitX=1;exitY=0.5;entryX=0;entryY=0.5;strokeColor=#00965E;strokeWidth=2;fontColor=#00965E;" edge="1" source="client" target="router_group" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== NAMESPACE BOX ==================== -->
+        <mxCell id="ns_box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F5F5F5;strokeColor=#00965E;strokeWidth=3;dashed=1;dashPattern=8 4;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="530" y="100" width="920" height="550" as="geometry" />
+        </mxCell>
+        <mxCell id="ns_title" value="&lt;font style=&quot;font-size:14px;font-weight:bold;color:#00965E;&quot;&gt;📦 Namespace: my-microservice-ns&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=top;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="545" y="108" width="280" height="30" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== POD BOX ==================== -->
+        <mxCell id="pod_box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E8F5E9;strokeColor=#00965E;strokeWidth=2;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="550" y="150" width="550" height="480" as="geometry" />
+        </mxCell>
+        <mxCell id="pod_title" value="&lt;font style=&quot;font-size:13px;font-weight:bold;color:#00965E;&quot;&gt;🔷 Pod: my-microservice&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=top;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="565" y="158" width="220" height="25" as="geometry" />
+        </mxCell>
+
+        <!-- ============ INIT CONTAINER 1: Get Pod Cert ============ -->
+        <mxCell id="init1" value="&lt;b&gt;Init Container 1&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#555;&quot;&gt;vault-get-pod-cert&lt;br&gt;&lt;br&gt;vault write pki_int/issue/pod-role&lt;br&gt;→ pod.crt + pod.key + ca.crt&lt;br&gt;→ mount: /tls/pod&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E3F2FD;strokeColor=#1565C0;strokeWidth=1.5;fontSize=10;align=center;" vertex="1" parent="1">
+          <mxGeometry x="570" y="195" width="160" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="init1_badge" value="&lt;font style=&quot;font-size:8px;color:#FFF;&quot;&gt;①&lt;/font&gt;" style="ellipse;whiteSpace=wrap;html=1;fillColor=#1565C0;strokeColor=none;aspect=fixed;" vertex="1" parent="1">
+          <mxGeometry x="565" y="190" width="20" height="20" as="geometry" />
+        </mxCell>
+
+        <!-- ============ INIT CONTAINER 2: Get Route Cert ============ -->
+        <mxCell id="init2" value="&lt;b&gt;Init Container 2&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#555;&quot;&gt;vault-get-route-cert&lt;br&gt;&lt;br&gt;vault write pki_int/issue/route-role&lt;br&gt;→ route.crt + route.key + ca.crt&lt;br&gt;→ mount: /tls/route&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E3F2FD;strokeColor=#1565C0;strokeWidth=1.5;fontSize=10;align=center;" vertex="1" parent="1">
+          <mxGeometry x="750" y="195" width="165" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="init2_badge" value="&lt;font style=&quot;font-size:8px;color:#FFF;&quot;&gt;②&lt;/font&gt;" style="ellipse;whiteSpace=wrap;html=1;fillColor=#1565C0;strokeColor=none;aspect=fixed;" vertex="1" parent="1">
+          <mxGeometry x="745" y="190" width="20" height="20" as="geometry" />
+        </mxCell>
+
+        <!-- ============ INIT CONTAINER 3: Create Route ============ -->
+        <mxCell id="init3" value="&lt;b&gt;Init Container 3&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#555;&quot;&gt;create-reencrypt-route&lt;br&gt;&lt;br&gt;oc get route || oc create route&lt;br&gt;reencrypt my-route&lt;br&gt;  --cert=/tls/route/route.crt&lt;br&gt;  --key=/tls/route/route.key&lt;br&gt;  --ca-cert=/tls/route/ca.crt&lt;br&gt;  --dest-ca-cert=/tls/pod/ca.crt&lt;br&gt;  --service=my-svc&lt;br&gt;  --port=8443&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E3F2FD;strokeColor=#1565C0;strokeWidth=1.5;fontSize=9;align=left;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="935" y="195" width="150" height="170" as="geometry" />
+        </mxCell>
+        <mxCell id="init3_badge" value="&lt;font style=&quot;font-size:8px;color:#FFF;&quot;&gt;③&lt;/font&gt;" style="ellipse;whiteSpace=wrap;html=1;fillColor=#1565C0;strokeColor=none;aspect=fixed;" vertex="1" parent="1">
+          <mxGeometry x="930" y="190" width="20" height="20" as="geometry" />
+        </mxCell>
+
+        <!-- ============ INIT CONTAINERS FLOW ARROWS ============ -->
+        <mxCell id="init_flow_1_2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;strokeColor=#1565C0;strokeWidth=1.5;dashed=1;dashPattern=5 3;" edge="1" source="init1" target="init2" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="init_flow_2_3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;exitX=1;exitY=0.5;entryX=0;entryY=0.3;strokeColor=#1565C0;strokeWidth=1.5;dashed=1;dashPattern=5 3;" edge="1" source="init2" target="init3" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- ============ SIDECAR NGINX ============ -->
+        <mxCell id="nginx" value="&lt;b&gt;Sidecar: Nginx&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#555;&quot;&gt;HTTPS :8443&lt;br&gt;ssl_certificate /tls/pod/pod.crt&lt;br&gt;ssl_certificate_key /tls/pod/pod.key&lt;br&gt;proxy_pass http://localhost:8080&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#C8E6C9;strokeColor=#2E7D32;strokeWidth=2;fontSize=10;align=center;" vertex="1" parent="1">
+          <mxGeometry x="570" y="400" width="220" height="100" as="geometry" />
+        </mxCell>
+
+        <!-- ============ APPLICATION CONTAINER ============ -->
+        <mxCell id="app" value="&lt;b&gt;Container Applicatif&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#555;&quot;&gt;Spring Boot (Java)&lt;br&gt;HTTP :8080&lt;br&gt;(plain HTTP interne)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF;strokeColor=#00965E;strokeWidth=2;fontSize=10;align=center;" vertex="1" parent="1">
+          <mxGeometry x="570" y="530" width="220" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- ============ NGINX -> APP ARROW ============ -->
+        <mxCell id="arrow_nginx_app" value="&lt;font style=&quot;font-size:9px;color:#2E7D32;&quot;&gt;HTTP :8080&lt;br&gt;(localhost)&lt;/font&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;strokeColor=#2E7D32;strokeWidth=1.5;" edge="1" source="nginx" target="app" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- ============ ROUTER -> NGINX ARROW ============ -->
+        <mxCell id="arrow_router_nginx" value="&lt;font style=&quot;font-size:10px;color:#E65100;&quot;&gt;HTTPS re-encrypted&lt;br&gt;(Pod Cert / destCA)&lt;/font&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;exitX=1;exitY=0.7;entryX=0;entryY=0.5;strokeColor=#E65100;strokeWidth=2;" edge="1" source="router_group" target="nginx" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- ============ EMPTYDIR VOLUMES ============ -->
+        <mxCell id="vol_pod" value="&lt;font style=&quot;font-size:9px;&quot;&gt;📁 &lt;b&gt;emptyDir&lt;/b&gt;&lt;br&gt;medium: Memory&lt;br&gt;/tls/pod&lt;br&gt;&lt;i&gt;pod.crt, pod.key, ca.crt&lt;/i&gt;&lt;/font&gt;" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=8;fillColor=#E8EAF6;strokeColor=#3949AB;fontSize=9;align=center;" vertex="1" parent="1">
+          <mxGeometry x="830" y="420" width="130" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="vol_route" value="&lt;font style=&quot;font-size:9px;&quot;&gt;📁 &lt;b&gt;emptyDir&lt;/b&gt;&lt;br&gt;medium: Memory&lt;br&gt;/tls/route&lt;br&gt;&lt;i&gt;route.crt, route.key, ca.crt&lt;/i&gt;&lt;/font&gt;" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=8;fillColor=#E8EAF6;strokeColor=#3949AB;fontSize=9;align=center;" vertex="1" parent="1">
+          <mxGeometry x="830" y="510" width="130" height="70" as="geometry" />
+        </mxCell>
+
+        <!-- ============ VOLUME LINKS ============ -->
+        <mxCell id="vol_link1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;strokeColor=#3949AB;strokeWidth=1;dashed=1;" edge="1" source="nginx" target="vol_pod" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="vol_link2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;exitX=1;exitY=0.8;entryX=0;entryY=0.5;strokeColor=#3949AB;strokeWidth=1;dashed=1;" edge="1" source="init1" target="vol_pod" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="810" y="270" />
+              <mxPoint x="810" y="455" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- ==================== VAULT PKI (EXTERNAL) ==================== -->
+        <mxCell id="vault_box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF;strokeColor=#FFB300;strokeWidth=2;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="720" y="720" width="260" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="vault_title" value="&lt;font style=&quot;font-size:13px;font-weight:bold;color:#FFB300;&quot;&gt;🔐 HashiCorp Vault&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=top;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="770" y="728" width="155" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="vault_pki1" value="&lt;font style=&quot;font-size:10px;&quot;&gt;&lt;b&gt;PKI Engine: pod-role&lt;/b&gt;&lt;br&gt;CN=*.my-ns.svc.cluster.local&lt;br&gt;TTL=30d&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF8E1;strokeColor=#FFB300;fontSize=10;align=center;" vertex="1" parent="1">
+          <mxGeometry x="730" y="760" width="115" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="vault_pki2" value="&lt;font style=&quot;font-size:10px;&quot;&gt;&lt;b&gt;PKI Engine: route-role&lt;/b&gt;&lt;br&gt;CN=app.example.com&lt;br&gt;TTL=90d&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF8E1;strokeColor=#FFB300;fontSize=10;align=center;" vertex="1" parent="1">
+          <mxGeometry x="855" y="760" width="115" height="55" as="geometry" />
+        </mxCell>
+
+        <!-- ============ VAULT ARROWS ============ -->
+        <mxCell id="arrow_init1_vault" value="&lt;font style=&quot;font-size:9px;color:#FFB300;&quot;&gt;Issue Pod Cert&lt;/font&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;exitX=0.5;exitY=1;entryX=0.3;entryY=0;strokeColor=#FFB300;strokeWidth=1.5;dashed=1;dashPattern=6 3;" edge="1" source="init1" target="vault_box" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="650" y="680" />
+              <mxPoint x="798" y="680" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="arrow_init2_vault" value="&lt;font style=&quot;font-size:9px;color:#FFB300;&quot;&gt;Issue Route Cert&lt;/font&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;exitX=0.5;exitY=1;entryX=0.7;entryY=0;strokeColor=#FFB300;strokeWidth=1.5;dashed=1;dashPattern=6 3;" edge="1" source="init2" target="vault_box" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="832" y="680" />
+              <mxPoint x="902" y="680" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- ==================== SERVICE ==================== -->
+        <mxCell id="svc" value="&lt;b&gt;Service: my-svc&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#555;&quot;&gt;port: 8443 → targetPort: 8443&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E0F2F1;strokeColor=#00695C;strokeWidth=1.5;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="550" y="340" width="210" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== CRONJOBS SECTION ==================== -->
+        <mxCell id="cron_box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FCE4EC;strokeColor=#C62828;strokeWidth=2;dashed=0;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="1160" y="150" width="270" height="490" as="geometry" />
+        </mxCell>
+        <mxCell id="cron_title" value="&lt;font style=&quot;font-size:13px;font-weight:bold;color:#C62828;&quot;&gt;⏰ CronJobs — Certificate Lifecycle&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=top;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="1175" y="158" width="248" height="25" as="geometry" />
+        </mxCell>
+
+        <!-- ============ CRONJOB 1: Pod Cert Renewal ============ -->
+        <mxCell id="cron1" value="&lt;b&gt;CronJob 1: pod-cert-renewal&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px;color:#555;&quot;&gt;schedule: &quot;0 2 * * *&quot; (daily 2AM)&lt;br&gt;&lt;br&gt;1. openssl s_client -connect&lt;br&gt;   my-svc.my-ns:8443&lt;br&gt;2. openssl x509 -checkend 604800&lt;br&gt;   (7 days before expiry)&lt;br&gt;3. IF expiring:&lt;br&gt;   → vault write pki_int/issue/pod-role&lt;br&gt;   → oc rollout restart deploy/my-ms&lt;br&gt;4. ELSE: exit 0 (cert still valid)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFEBEE;strokeColor=#C62828;strokeWidth=1.5;fontSize=9;align=left;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="1175" y="195" width="240" height="175" as="geometry" />
+        </mxCell>
+
+        <!-- ============ CRONJOB 2: Route Cert Renewal ============ -->
+        <mxCell id="cron2" value="&lt;b&gt;CronJob 2: route-cert-renewal&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px;color:#555;&quot;&gt;schedule: &quot;0 3 * * *&quot; (daily 3AM)&lt;br&gt;&lt;br&gt;1. openssl s_client -connect&lt;br&gt;   my-svc.my-ns.svc:8443&lt;br&gt;   -servername app.example.com&lt;br&gt;2. openssl x509 -checkend 604800&lt;br&gt;   (7 days before expiry)&lt;br&gt;3. IF expiring:&lt;br&gt;   → vault write pki_int/issue/route-role&lt;br&gt;   → oc patch route my-route&lt;br&gt;     --type=merge -p '{...tls certs...}'&lt;br&gt;4. ELSE: exit 0 (cert still valid)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFEBEE;strokeColor=#C62828;strokeWidth=1.5;fontSize=9;align=left;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="1175" y="395" width="240" height="200" as="geometry" />
+        </mxCell>
+
+        <!-- ============ CRONJOB ARROWS ============ -->
+        <mxCell id="arrow_cron1_svc" value="&lt;font style=&quot;font-size:9px;color:#C62828;&quot;&gt;openssl s_client&lt;br&gt;:8443&lt;/font&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;exitX=0;exitY=0.4;entryX=1;entryY=0.5;strokeColor=#C62828;strokeWidth=1.5;dashed=1;" edge="1" source="cron1" target="nginx" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1140" y="265" />
+              <mxPoint x="1140" y="450" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="arrow_cron2_route" value="&lt;font style=&quot;font-size:9px;color:#C62828;&quot;&gt;oc patch route&lt;/font&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;exitX=0;exitY=0.7;entryX=1;entryY=0.3;strokeColor=#C62828;strokeWidth=1.5;dashed=1;" edge="1" source="cron2" target="router_group" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1130" y="535" />
+              <mxPoint x="500" y="535" />
+              <mxPoint x="500" y="286" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="arrow_cron1_vault" value="&lt;font style=&quot;font-size:9px;color:#FFB300;&quot;&gt;Renew&lt;/font&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;exitX=0.5;exitY=1;entryX=1;entryY=0.3;strokeColor=#FFB300;strokeWidth=1.5;dashed=1;dashPattern=6 3;" edge="1" source="cron1" target="vault_box" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1295" y="700" />
+              <mxPoint x="1000" y="700" />
+              <mxPoint x="1000" y="762" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="arrow_cron2_vault" value="&lt;font style=&quot;font-size:9px;color:#FFB300;&quot;&gt;Renew&lt;/font&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;exitX=0.5;exitY=1;entryX=1;entryY=0.7;strokeColor=#FFB300;strokeWidth=1.5;dashed=1;dashPattern=6 3;" edge="1" source="cron2" target="vault_box" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1295" y="870" />
+              <mxPoint x="990" y="870" />
+              <mxPoint x="990" y="818" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="arrow_cron1_rollout" value="&lt;font style=&quot;font-size:9px;color:#C62828;&quot;&gt;oc rollout restart&lt;/font&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;exitX=0;exitY=0.2;entryX=1;entryY=0.1;strokeColor=#C62828;strokeWidth=1.5;dashed=1;" edge="1" source="cron1" target="pod_box" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1130" y="230" />
+              <mxPoint x="1130" y="198" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- ==================== RBAC NOTE ==================== -->
+        <mxCell id="rbac_note" value="&lt;font style=&quot;font-size:10px;&quot;&gt;⚠️ &lt;b&gt;RBAC Requirements&lt;/b&gt;&lt;br&gt;&lt;br&gt;&lt;b&gt;ServiceAccount: my-ms-sa&lt;/b&gt;&lt;br&gt;• Init Container 3: routes [create, get]&lt;br&gt;• CronJob 1: deployments [get, patch] (rollout)&lt;br&gt;• CronJob 2: routes [get, patch]&lt;br&gt;&lt;br&gt;&lt;b&gt;Vault Auth:&lt;/b&gt; Kubernetes auth method&lt;br&gt;bound_service_account_names=[&quot;my-ms-sa&quot;]&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF9C4;strokeColor=#F9A825;strokeWidth=1.5;fontSize=9;align=left;spacingLeft=10;spacingRight=10;" vertex="1" parent="1">
+          <mxGeometry x="60" y="520" width="240" height="170" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== LEGEND ==================== -->
+        <mxCell id="legend_box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FAFAFA;strokeColor=#999;strokeWidth=1;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="60" y="720" width="350" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="legend_title" value="&lt;font style=&quot;font-size:11px;font-weight:bold;color:#333;&quot;&gt;Légende&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=top;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="75" y="725" width="65" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="leg1" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E3F2FD;strokeColor=#1565C0;strokeWidth=1.5;" vertex="1" parent="1">
+          <mxGeometry x="75" y="755" width="25" height="12" as="geometry" />
+        </mxCell>
+        <mxCell id="leg1t" value="&lt;font style=&quot;font-size:9px;&quot;&gt;Init Containers (séquentiels ① → ② → ③)&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="105" y="748" width="230" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="leg2" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#C8E6C9;strokeColor=#2E7D32;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="75" y="775" width="25" height="12" as="geometry" />
+        </mxCell>
+        <mxCell id="leg2t" value="&lt;font style=&quot;font-size:9px;&quot;&gt;Sidecar Nginx (TLS termination côté pod)&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="105" y="768" width="225" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="leg3" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFEBEE;strokeColor=#C62828;strokeWidth=1.5;" vertex="1" parent="1">
+          <mxGeometry x="75" y="795" width="25" height="12" as="geometry" />
+        </mxCell>
+        <mxCell id="leg3t" value="&lt;font style=&quot;font-size:9px;&quot;&gt;CronJobs (test validité + renouvellement auto)&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="105" y="788" width="250" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="leg4" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF8E1;strokeColor=#FFB300;strokeWidth=1.5;" vertex="1" parent="1">
+          <mxGeometry x="75" y="815" width="25" height="12" as="geometry" />
+        </mxCell>
+        <mxCell id="leg4t" value="&lt;font style=&quot;font-size:9px;&quot;&gt;Vault PKI (émission &amp; renouvellement certificats)&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="105" y="808" width="265" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="leg5" value="" style="shape=cylinder3;whiteSpace=wrap;html=1;fillColor=#E8EAF6;strokeColor=#3949AB;size=4;" vertex="1" parent="1">
+          <mxGeometry x="75" y="833" width="25" height="18" as="geometry" />
+        </mxCell>
+        <mxCell id="leg5t" value="&lt;font style=&quot;font-size:9px;&quot;&gt;emptyDir (medium: Memory) — clés en RAM uniquement&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="105" y="828" width="280" height="25" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== TLS FLOW SUMMARY ==================== -->
+        <mxCell id="flow_box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E8F5E9;strokeColor=#00965E;strokeWidth=2;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="440" y="720" width="250" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="flow_title" value="&lt;font style=&quot;font-size:11px;font-weight:bold;color:#00965E;&quot;&gt;Flux TLS Reencrypt&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=top;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="490" y="725" width="145" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="flow_desc" value="&lt;font style=&quot;font-size:9px;color:#333;&quot;&gt;Client → &lt;b&gt;HTTPS (Route Cert)&lt;/b&gt; → HAProxy&lt;br&gt;HAProxy décrypte, puis re-encrypte vers :&lt;br&gt;HAProxy → &lt;b&gt;HTTPS (Pod Cert)&lt;/b&gt; → Nginx :8443&lt;br&gt;Nginx décrypte, forward en HTTP :&lt;br&gt;Nginx → &lt;b&gt;HTTP&lt;/b&gt; → App :8080 (localhost)&lt;br&gt;&lt;br&gt;✅ TLS de bout en bout&lt;br&gt;✅ Deux PKI paths distincts&lt;br&gt;✅ Clés privées uniquement en RAM&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=top;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="455" y="752" width="230" height="105" as="geometry" />
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
