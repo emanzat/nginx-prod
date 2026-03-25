@@ -1,0 +1,14 @@
+echo -en "\nUse the link below to generate passcode: https://iam.cloud.ibm.com/identity/passcode\n"
+printf "Open URL in default browser? [y/n]: "
+read answer
+if [[ "$answer" == "y" || "$answer" == "Y" ]]; then
+    # macOS
+    if command -v open &>/dev/null; then
+        open "https://iam.cloud.ibm.com/identity/passcode"
+    # Linux
+    elif command -v xdg-open &>/dev/null; then
+        xdg-open "https://iam.cloud.ibm.com/identity/passcode"
+    fi
+fi
+printf "Passcode: "
+read passcode
