@@ -1,0 +1,341 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="1654" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+
+    <!-- ═══════════════════════════════════════════════
+         SWIMLANE CONTAINER
+    ═══════════════════════════════════════════════ -->
+    <mxCell id="swim_container" value="Migration &amp; Onboarding — dMZRI → OpenShift" style="shape=pool;startSize=30;horizontal=1;childLayout=stackLayout;horizontalStack=1;resizeParent=1;resizeParent=1;collapsible=0;marginBottom=0;swimlaneHead=0;fillColor=#1e4d78;fontColor=#ffffff;strokeColor=#0C447C;fontSize=13;fontStyle=1;align=center;" vertex="1" parent="1">
+      <mxGeometry x="40" y="40" width="1080" height="1360" as="geometry"/>
+    </mxCell>
+
+    <!-- ═══════════════════════════════════════════════
+         COLONNES SWIMLANE
+    ═══════════════════════════════════════════════ -->
+    <!-- Colonne APS Team -->
+    <mxCell id="col_aps" value="APS Team" style="swimlane;startSize=30;horizontal=0;fillColor=#0F6E56;fontColor=#E1F5EE;strokeColor=#085041;fontSize=13;fontStyle=1;align=center;" vertex="1" parent="swim_container">
+      <mxGeometry x="0" y="0" width="360" height="1360" as="geometry"/>
+    </mxCell>
+
+    <!-- Colonne TO (NTS + FAN) -->
+    <mxCell id="col_to" value="TO (NTS + FAN)" style="swimlane;startSize=30;horizontal=0;fillColor=#534AB7;fontColor=#EEEDFE;strokeColor=#3C3489;fontSize=13;fontStyle=1;align=center;" vertex="1" parent="swim_container">
+      <mxGeometry x="360" y="0" width="360" height="1360" as="geometry"/>
+    </mxCell>
+
+    <!-- Colonne BP2I -->
+    <mxCell id="col_bp2i" value="BP2I" style="swimlane;startSize=30;horizontal=0;fillColor=#185FA5;fontColor=#E6F1FB;strokeColor=#0C447C;fontSize=13;fontStyle=1;align=center;" vertex="1" parent="swim_container">
+      <mxGeometry x="720" y="0" width="360" height="1360" as="geometry"/>
+    </mxCell>
+
+    <!-- ═══════════════════════════════════════════════
+         PHASE BANNERS
+    ═══════════════════════════════════════════════ -->
+    <!-- Phase 1 banner -->
+    <mxCell id="ph1_banner_aps" value="Phase 1 — Analyse &amp; planification" style="text;html=1;strokeColor=none;fillColor=#D3D1C7;align=center;verticalAlign=middle;spacingLeft=4;fontSize=11;fontStyle=1;fontColor=#444441;" vertex="1" parent="col_aps">
+      <mxGeometry x="30" y="40" width="300" height="24" as="geometry"/>
+    </mxCell>
+    <mxCell id="ph1_banner_to" value="" style="text;html=1;strokeColor=none;fillColor=#D3D1C7;align=center;verticalAlign=middle;fontSize=11;fontStyle=1;fontColor=#444441;" vertex="1" parent="col_to">
+      <mxGeometry x="30" y="40" width="300" height="24" as="geometry"/>
+    </mxCell>
+    <mxCell id="ph1_banner_bp2i" value="" style="text;html=1;strokeColor=none;fillColor=#D3D1C7;align=center;verticalAlign=middle;fontSize=11;fontStyle=1;fontColor=#444441;" vertex="1" parent="col_bp2i">
+      <mxGeometry x="30" y="40" width="300" height="24" as="geometry"/>
+    </mxCell>
+
+    <!-- Phase 2 banner -->
+    <mxCell id="ph2_banner_aps" value="Phase 2 — Hackathon &amp; implémentation" style="text;html=1;strokeColor=none;fillColor=#AFA9EC;align=center;verticalAlign=middle;spacingLeft=4;fontSize=11;fontStyle=1;fontColor=#26215C;" vertex="1" parent="col_aps">
+      <mxGeometry x="30" y="340" width="300" height="24" as="geometry"/>
+    </mxCell>
+    <mxCell id="ph2_banner_to" value="" style="text;html=1;strokeColor=none;fillColor=#AFA9EC;align=center;verticalAlign=middle;fontSize=11;fontStyle=1;" vertex="1" parent="col_to">
+      <mxGeometry x="30" y="340" width="300" height="24" as="geometry"/>
+    </mxCell>
+    <mxCell id="ph2_banner_bp2i" value="" style="text;html=1;strokeColor=none;fillColor=#AFA9EC;align=center;verticalAlign=middle;fontSize=11;fontStyle=1;" vertex="1" parent="col_bp2i">
+      <mxGeometry x="30" y="340" width="300" height="24" as="geometry"/>
+    </mxCell>
+
+    <!-- Phase 3 banner -->
+    <mxCell id="ph3_banner_aps" value="Phase 3 — Onboarding infra" style="text;html=1;strokeColor=none;fillColor=#85B7EB;align=center;verticalAlign=middle;spacingLeft=4;fontSize=11;fontStyle=1;fontColor=#042C53;" vertex="1" parent="col_aps">
+      <mxGeometry x="30" y="620" width="300" height="24" as="geometry"/>
+    </mxCell>
+    <mxCell id="ph3_banner_to" value="" style="text;html=1;strokeColor=none;fillColor=#85B7EB;align=center;verticalAlign=middle;fontSize=11;fontStyle=1;" vertex="1" parent="col_to">
+      <mxGeometry x="30" y="620" width="300" height="24" as="geometry"/>
+    </mxCell>
+    <mxCell id="ph3_banner_bp2i" value="" style="text;html=1;strokeColor=none;fillColor=#85B7EB;align=center;verticalAlign=middle;fontSize=11;fontStyle=1;" vertex="1" parent="col_bp2i">
+      <mxGeometry x="30" y="620" width="300" height="24" as="geometry"/>
+    </mxCell>
+
+    <!-- Phase 4 banner -->
+    <mxCell id="ph4_banner_aps" value="Phase 4 — Déploiement &amp; décommissionnement" style="text;html=1;strokeColor=none;fillColor=#97C459;align=center;verticalAlign=middle;spacingLeft=4;fontSize=11;fontStyle=1;fontColor=#173404;" vertex="1" parent="col_aps">
+      <mxGeometry x="30" y="880" width="300" height="24" as="geometry"/>
+    </mxCell>
+    <mxCell id="ph4_banner_to" value="" style="text;html=1;strokeColor=none;fillColor=#97C459;align=center;verticalAlign=middle;fontSize=11;fontStyle=1;" vertex="1" parent="col_to">
+      <mxGeometry x="30" y="880" width="300" height="24" as="geometry"/>
+    </mxCell>
+    <mxCell id="ph4_banner_bp2i" value="" style="text;html=1;strokeColor=none;fillColor=#97C459;align=center;verticalAlign=middle;fontSize=11;fontStyle=1;" vertex="1" parent="col_bp2i">
+      <mxGeometry x="30" y="880" width="300" height="24" as="geometry"/>
+    </mxCell>
+
+    <!-- ═══════════════════════════════════════════════
+         PHASE 1 — NODES
+    ═══════════════════════════════════════════════ -->
+    <!-- APS: Planification par phase -->
+    <mxCell id="p1_planif" value="Planification par phase de migration" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E1F5EE;strokeColor=#0F6E56;fontColor=#085041;fontSize=12;fontStyle=1;arcSize=10;" vertex="1" parent="col_aps">
+      <mxGeometry x="30" y="76" width="300" height="50" as="geometry"/>
+    </mxCell>
+
+    <!-- APS: Analyse des prérequis -->
+    <mxCell id="p1_analyse" value="Analyse des prérequis" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E1F5EE;strokeColor=#0F6E56;fontColor=#085041;fontSize=12;fontStyle=1;arcSize=10;" vertex="1" parent="col_aps">
+      <mxGeometry x="30" y="166" width="300" height="50" as="geometry"/>
+    </mxCell>
+
+    <!-- APS: Compléter prérequis -->
+    <mxCell id="p1_completer" value="Compléter prérequis&#xa;(si incomplet)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FAEEDA;strokeColor=#854F0B;fontColor=#633806;fontSize=12;fontStyle=1;arcSize=10;" vertex="1" parent="col_aps">
+      <mxGeometry x="30" y="256" width="300" height="50" as="geometry"/>
+    </mxCell>
+
+    <!-- TO: Accompagnement dMZRI TOE FAN -->
+    <mxCell id="p1_accomp_to" value="Accompagnement dMZRI&#xa;TOE FAN" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EEEDFE;strokeColor=#534AB7;fontColor=#3C3489;fontSize=12;fontStyle=1;arcSize=10;" vertex="1" parent="col_to">
+      <mxGeometry x="30" y="76" width="300" height="50" as="geometry"/>
+    </mxCell>
+
+    <!-- ═══════════════════════════════════════════════
+         PHASE 2 — NODES
+    ═══════════════════════════════════════════════ -->
+    <!-- APS: Décision Hackathon? (losange) -->
+    <mxCell id="p2_decision" value="Hackathon?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#EEEDFE;strokeColor=#534AB7;fontColor=#3C3489;fontSize=12;fontStyle=1;" vertex="1" parent="col_aps">
+      <mxGeometry x="80" y="376" width="200" height="80" as="geometry"/>
+    </mxCell>
+
+    <!-- APS: Souscription hackathon -->
+    <mxCell id="p2_souscrip" value="Souscription hackathon&#xa;APS Team" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EEEDFE;strokeColor=#534AB7;fontColor=#3C3489;fontSize=12;fontStyle=1;arcSize=10;" vertex="1" parent="col_aps">
+      <mxGeometry x="30" y="490" width="300" height="50" as="geometry"/>
+    </mxCell>
+
+    <!-- APS: APS team autonome -->
+    <mxCell id="p2_autonome" value="APS team autonome&#xa;implémentation" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E1F5EE;strokeColor=#0F6E56;fontColor=#085041;fontSize=12;fontStyle=1;arcSize=10;" vertex="1" parent="col_aps">
+      <mxGeometry x="30" y="560" width="300" height="50" as="geometry"/>
+    </mxCell>
+
+    <!-- TO: Accompagnement TOE FAN hackathon -->
+    <mxCell id="p2_accomp_fan" value="Accompagnement TOE FAN&#xa;hackathon onboarding" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FAECE7;strokeColor=#993C1D;fontColor=#712B13;fontSize=12;fontStyle=1;arcSize=10;" vertex="1" parent="col_to">
+      <mxGeometry x="30" y="490" width="300" height="50" as="geometry"/>
+    </mxCell>
+
+    <!-- TO: Support TO (si autonome) -->
+    <mxCell id="p2_support_to" value="Support TO&#xa;si autonome" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EEEDFE;strokeColor=#534AB7;fontColor=#3C3489;fontSize=12;fontStyle=1;arcSize=10;" vertex="1" parent="col_to">
+      <mxGeometry x="30" y="560" width="300" height="50" as="geometry"/>
+    </mxCell>
+
+    <!-- ═══════════════════════════════════════════════
+         PHASE 3 — NODES
+    ═══════════════════════════════════════════════ -->
+    <!-- APS: Validation prérequis check TO -->
+    <mxCell id="p3_valid_pre" value="Validation prérequis&#xa;check avec TO" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E6F1FB;strokeColor=#185FA5;fontColor=#0C447C;fontSize=12;fontStyle=1;arcSize=10;" vertex="1" parent="col_aps">
+      <mxGeometry x="30" y="656" width="300" height="50" as="geometry"/>
+    </mxCell>
+
+    <!-- APS: Compléter prérequis KO -->
+    <mxCell id="p3_completer_ko" value="Compléter prérequis&#xa;KO — itération" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FAEEDA;strokeColor=#854F0B;fontColor=#633806;fontSize=12;fontStyle=1;arcSize=10;" vertex="1" parent="col_aps">
+      <mxGeometry x="30" y="726" width="300" height="50" as="geometry"/>
+    </mxCell>
+
+    <!-- APS: Hackathon infra onboarding -->
+    <mxCell id="p3_hackathon_infra" value="Hackathon infra onboarding" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E6F1FB;strokeColor=#185FA5;fontColor=#0C447C;fontSize=12;fontStyle=1;arcSize=10;" vertex="1" parent="col_aps">
+      <mxGeometry x="30" y="796" width="300" height="50" as="geometry"/>
+    </mxCell>
+
+    <!-- TO: Validation SATS — Architect -->
+    <mxCell id="p3_sats" value="Validation SATS&#xa;Architect TO/OCP" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FAEEDA;strokeColor=#854F0B;fontColor=#633806;fontSize=12;fontStyle=1;arcSize=10;" vertex="1" parent="col_to">
+      <mxGeometry x="30" y="656" width="300" height="50" as="geometry"/>
+    </mxCell>
+
+    <!-- TO: Accompagnement TOE NTS -->
+    <mxCell id="p3_accomp_nts" value="Accompagnement TOE NTS" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EEEDFE;strokeColor=#534AB7;fontColor=#3C3489;fontSize=12;fontStyle=1;arcSize=10;" vertex="1" parent="col_to">
+      <mxGeometry x="30" y="796" width="300" height="50" as="geometry"/>
+    </mxCell>
+
+    <!-- BP2I: Hackathon infra -->
+    <mxCell id="p3_bp2i_infra" value="Hackathon infra&#xa;BP2I" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E6F1FB;strokeColor=#185FA5;fontColor=#0C447C;fontSize=12;fontStyle=1;arcSize=10;" vertex="1" parent="col_bp2i">
+      <mxGeometry x="30" y="796" width="300" height="50" as="geometry"/>
+    </mxCell>
+
+    <!-- ═══════════════════════════════════════════════
+         PHASE 4 — NODES
+    ═══════════════════════════════════════════════ -->
+    <!-- APS: Déploiement & test DEV -->
+    <mxCell id="p4_dev" value="Déploiement &amp; test DEV" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EAF3DE;strokeColor=#3B6D11;fontColor=#27500A;fontSize=12;fontStyle=1;arcSize=10;" vertex="1" parent="col_aps">
+      <mxGeometry x="30" y="916" width="300" height="50" as="geometry"/>
+    </mxCell>
+
+    <!-- APS: Déploiement autres ENVs -->
+    <mxCell id="p4_envs" value="Déploiement autres ENVs" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EAF3DE;strokeColor=#3B6D11;fontColor=#27500A;fontSize=12;fontStyle=1;arcSize=10;" vertex="1" parent="col_aps">
+      <mxGeometry x="30" y="986" width="300" height="50" as="geometry"/>
+    </mxCell>
+
+    <!-- APS: Déploiement PROD -->
+    <mxCell id="p4_prod" value="Déploiement PROD" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EAF3DE;strokeColor=#3B6D11;fontColor=#27500A;fontSize=12;fontStyle=1;arcSize=10;" vertex="1" parent="col_aps">
+      <mxGeometry x="30" y="1056" width="300" height="50" as="geometry"/>
+    </mxCell>
+
+    <!-- APS: Décommissionnement infra dMZR -->
+    <mxCell id="p4_decom" value="Décommissionnement&#xa;infra dMZR" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EAF3DE;strokeColor=#3B6D11;fontColor=#27500A;fontSize=12;fontStyle=1;arcSize=10;" vertex="1" parent="col_aps">
+      <mxGeometry x="30" y="1126" width="300" height="50" as="geometry"/>
+    </mxCell>
+
+    <!-- TO: Support TO NTS -->
+    <mxCell id="p4_support_nts" value="Support TO NTS&#xa;déploiement" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EEEDFE;strokeColor=#534AB7;fontColor=#3C3489;fontSize=12;fontStyle=1;arcSize=10;" vertex="1" parent="col_to">
+      <mxGeometry x="30" y="986" width="300" height="50" as="geometry"/>
+    </mxCell>
+
+    <!-- TO: Support TO FAN décommissionnement -->
+    <mxCell id="p4_support_fan" value="Support TO FAN&#xa;décommissionnement" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FAECE7;strokeColor=#993C1D;fontColor=#712B13;fontSize=12;fontStyle=1;arcSize=10;" vertex="1" parent="col_to">
+      <mxGeometry x="30" y="1126" width="300" height="50" as="geometry"/>
+    </mxCell>
+
+    <!-- BP2I: FULL TLS BNPP -->
+    <mxCell id="p4_tls" value="FULL TLS BNPP&#xa;BP2I" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E6F1FB;strokeColor=#185FA5;fontColor=#0C447C;fontSize=12;fontStyle=1;arcSize=10;" vertex="1" parent="col_bp2i">
+      <mxGeometry x="30" y="916" width="300" height="50" as="geometry"/>
+    </mxCell>
+
+    <!-- BP2I: Mise à jour docs Confluence -->
+    <mxCell id="p4_docs" value="Mise à jour docs&#xa;Confluence" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E1F5EE;strokeColor=#0F6E56;fontColor=#085041;fontSize=12;fontStyle=1;arcSize=10;" vertex="1" parent="col_bp2i">
+      <mxGeometry x="30" y="1126" width="300" height="50" as="geometry"/>
+    </mxCell>
+
+    <!-- ═══════════════════════════════════════════════
+         EDGES — Phase 1 (intra-APS)
+    ═══════════════════════════════════════════════ -->
+    <mxCell id="e_p1_planif_analyse" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#0F6E56;strokeWidth=1.5;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" source="p1_planif" target="p1_analyse" parent="col_aps">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="e_p1_analyse_completer" value="NON" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#854F0B;strokeWidth=1;dashed=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;fontSize=10;fontColor=#854F0B;" edge="1" source="p1_analyse" target="p1_completer" parent="col_aps">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+
+    <!-- Phase 1 — APS → TO -->
+    <mxCell id="e_p1_aps_to" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#534AB7;strokeWidth=1;dashed=1;" edge="1" source="p1_planif" target="p1_accomp_to" parent="swim_container">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+
+    <!-- ═══════════════════════════════════════════════
+         EDGES — Phase 1 → Phase 2 (inter-phase)
+    ═══════════════════════════════════════════════ -->
+    <mxCell id="e_ph1_ph2" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#888780;strokeWidth=1.5;dashed=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" source="p1_analyse" target="p2_decision" parent="col_aps">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+
+    <!-- ═══════════════════════════════════════════════
+         EDGES — Phase 2 (intra + cross)
+    ═══════════════════════════════════════════════ -->
+    <mxCell id="e_p2_oui" value="OUI" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#534AB7;strokeWidth=1.5;exitX=0.5;exitY=1;entryX=0.5;entryY=0;fontSize=10;fontColor=#534AB7;" edge="1" source="p2_decision" target="p2_souscrip" parent="col_aps">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="e_p2_non" value="NON" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#888780;strokeWidth=1;dashed=1;exitX=0;exitY=0.5;entryX=0;entryY=0.5;fontSize=10;fontColor=#5F5E5A;" edge="1" source="p2_decision" target="p2_autonome" parent="col_aps">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="20" y="416"/>
+          <mxPoint x="20" y="585"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+
+    <!-- APS souscription → TO accompagnement FAN -->
+    <mxCell id="e_p2_souscrip_fan" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#993C1D;strokeWidth=1;dashed=1;" edge="1" source="p2_souscrip" target="p2_accomp_fan" parent="swim_container">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+
+    <!-- APS autonome → TO support -->
+    <mxCell id="e_p2_autonome_to" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#534AB7;strokeWidth=1;dashed=1;" edge="1" source="p2_autonome" target="p2_support_to" parent="swim_container">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+
+    <!-- ═══════════════════════════════════════════════
+         EDGES — Phase 2 → Phase 3
+    ═══════════════════════════════════════════════ -->
+    <mxCell id="e_ph2_ph3" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#888780;strokeWidth=1.5;dashed=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" source="p2_souscrip" target="p3_valid_pre" parent="col_aps">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+
+    <!-- ═══════════════════════════════════════════════
+         EDGES — Phase 3 (intra + cross)
+    ═══════════════════════════════════════════════ -->
+    <mxCell id="e_p3_ko" value="KO" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#854F0B;strokeWidth=1;dashed=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;fontSize=10;fontColor=#854F0B;" edge="1" source="p3_valid_pre" target="p3_completer_ko" parent="col_aps">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+
+    <!-- KO loop back -->
+    <mxCell id="e_p3_ko_loop" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#854F0B;strokeWidth=1;dashed=1;exitX=0;exitY=0.5;entryX=0;entryY=0.5;" edge="1" source="p3_completer_ko" target="p3_valid_pre" parent="col_aps">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="10" y="751"/>
+          <mxPoint x="10" y="681"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+
+    <mxCell id="e_p3_ok" value="OK" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#185FA5;strokeWidth=1.5;exitX=0.5;exitY=1;entryX=0.5;entryY=0;fontSize=10;fontColor=#185FA5;" edge="1" source="p3_valid_pre" target="p3_hackathon_infra" parent="col_aps">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+
+    <!-- APS valid → TO SATS -->
+    <mxCell id="e_p3_sats" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#854F0B;strokeWidth=1;dashed=1;" edge="1" source="p3_valid_pre" target="p3_sats" parent="swim_container">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+
+    <!-- APS hackathon infra → TO NTS -->
+    <mxCell id="e_p3_nts" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#534AB7;strokeWidth=1;dashed=1;" edge="1" source="p3_hackathon_infra" target="p3_accomp_nts" parent="swim_container">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+
+    <!-- APS hackathon infra → BP2I -->
+    <mxCell id="e_p3_bp2i" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#185FA5;strokeWidth=1;dashed=1;" edge="1" source="p3_hackathon_infra" target="p3_bp2i_infra" parent="swim_container">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+
+    <!-- ═══════════════════════════════════════════════
+         EDGES — Phase 3 → Phase 4
+    ═══════════════════════════════════════════════ -->
+    <mxCell id="e_ph3_ph4" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#888780;strokeWidth=1.5;dashed=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" source="p3_hackathon_infra" target="p4_dev" parent="col_aps">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+
+    <!-- ═══════════════════════════════════════════════
+         EDGES — Phase 4 (intra + cross)
+    ═══════════════════════════════════════════════ -->
+    <mxCell id="e_p4_dev_envs" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#3B6D11;strokeWidth=1.5;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" source="p4_dev" target="p4_envs" parent="col_aps">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="e_p4_envs_prod" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#3B6D11;strokeWidth=1.5;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" source="p4_envs" target="p4_prod" parent="col_aps">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="e_p4_prod_decom" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#3B6D11;strokeWidth=1.5;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" source="p4_prod" target="p4_decom" parent="col_aps">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+
+    <!-- APS DEV → BP2I TLS -->
+    <mxCell id="e_p4_tls" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#185FA5;strokeWidth=1;dashed=1;" edge="1" source="p4_dev" target="p4_tls" parent="swim_container">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+
+    <!-- APS ENVs → TO NTS -->
+    <mxCell id="e_p4_nts" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#534AB7;strokeWidth=1;dashed=1;" edge="1" source="p4_envs" target="p4_support_nts" parent="swim_container">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+
+    <!-- APS décommissionnement → TO FAN -->
+    <mxCell id="e_p4_fan" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#993C1D;strokeWidth=1;dashed=1;" edge="1" source="p4_decom" target="p4_support_fan" parent="swim_container">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+
+    <!-- APS décommissionnement → BP2I docs -->
+    <mxCell id="e_p4_docs" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#0F6E56;strokeWidth=1;dashed=1;" edge="1" source="p4_decom" target="p4_docs" parent="swim_container">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+
+  </root>
+</mxGraphModel>
