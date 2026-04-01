@@ -1,0 +1,238 @@
+You are a senior Java Software Architect
+
+Design a complete enterprise-grade microservice architecture using:
+
+- Java 21
+- Spring Boot 4
+- PostgreSQL
+- Kafka
+- Docker
+- Kubernetes
+
+The application domain is:
+
+“Government Subsidy Application Management System”
+
+Citizens submit subsidy requests and government agents review, validate, approve or reject them.
+
+The system must be production-ready and follow clean architecture and best practices.
+
+1. ARCHITECTURE
+
+Use a layered architecture:
+
+- Controller
+- Service
+- Repository
+- Entity
+- DTO (Model/Structure)
+- Exception
+- Config
+- Security
+- Util
+
+Apply best practices:
+
+- Clean architecture
+- Separation of concerns
+- Centralized exception handling
+- Validation
+
+2. SPRING PROFILES
+
+Support multiple Spring profiles:
+
+- dev
+- test
+- preprod
+- prod
+
+Each profile must configure:
+
+- Database
+- Logging
+- Security
+- Kafka
+
+3. DOMAIN MODEL
+
+Entities:
+
+- User
+- Application
+- Status
+- SubsidyType
+- Document
+
+Relationships:
+
+- User has many Applications
+- Application belongs to User
+- Application has Status
+- Application has Documents
+
+Status:
+
+- SUBMITTED
+- IN_REVIEW
+- APPROVED
+- REJECTED
+
+4. DTO STRUCTURE
+
+- CreateApplicationRequest
+- UpdateApplicationRequest
+- ApplicationResponse
+
+5. SECURITY
+
+Use Spring Security with:
+
+- JWT authentication
+- Role-based access control
+
+Roles:
+
+- ADMIN
+- AGENT
+- CITIZEN
+
+Authorization:
+
+- ADMIN: full access
+- AGENT: review/validate
+- CITIZEN: submit/view
+
+6. INTERNATIONALIZATION
+
+- messages_en.properties
+- messages_fr.properties
+
+7. VALIDATION
+
+Use Jakarta Validation:
+
+- @NotNull
+- @Email
+- @NotBlank
+
+Return structured validation errors.
+
+8. EXCEPTION HANDLING
+
+Use:
+
+- @ControllerAdvice
+- Custom exceptions
+
+Return structured JSON errors.
+
+9. KAFKA INTEGRATION
+
+Events:
+
+- application-submitted
+- application-approved
+- application-rejected
+
+10. API DOCUMENTATION
+
+Use OpenAPI / Swagger
+
+11. TESTING
+
+- Unit tests
+- Integration tests
+
+Tools:
+
+- JUnit 5
+- Mockito
+- Testcontainers
+
+12. DATABASE
+
+Use PostgreSQL
+
+- schema.sql
+- data.sql
+
+Use Flyway migrations.
+
+13. FRONTEND
+
+Use Thymeleaf:
+
+- Login
+- Dashboard
+- Create application
+- Track application
+
+14. DOCKER
+
+Provide:
+
+- Dockerfile
+- docker-compose.yml
+
+Services:
+
+- App
+- PostgreSQL
+- Kafka
+- Zookeeper
+
+15. KUBERNETES
+
+Provide:
+
+- Deployment
+- Service
+- ConfigMap
+- Secret
+
+Deployable on:
+
+- Minikube
+- EKS / GKE / AKS
+
+16. CI/CD
+
+GitLab pipeline:
+
+- build
+- test
+- docker build
+- docker push
+- kubernetes deploy
+
+17. PROJECT STRUCTURE
+
+src/main/java/com/gov/subsidy
+├── controller
+├── service
+├── repository
+├── dto
+├── entity
+├── exception
+├── config
+├── security
+└── util
+
+18. CODE QUALITY
+
+- Lombok
+- MapStruct
+- SLF4J
+
+19. CONSISTENCY
+
+- Transactional consistency
+- Idempotency
+- Retry mechanisms
+
+20. OUTPUT
+
+- Full project
+- Working code
+- Docker + Kubernetes ready
