@@ -1,0 +1,105 @@
+#!/bin/bash
+set -euo pipefail
+
+APP="{{ .Values.global.app }}"
+NAMESPACE="{{ .Values.global.namespace }}"
+ROUTE_NAME="${APP}-route"
+
+CERT=/etc/route/tls/tls.crt
+KEY=/etc/route/tls/tls.key
+CA=/etc/route/tls/issuing_ca.crt
+DEST_CA=/etc/nginx/tls/issuing_ca.crt
+
+EXISTING_CERT=$(oc get route "${ROUTE_NAME}" -n "${NAMESPACE}" \
+  -o jsonpath='{.spec.tls.certificate}' 2>/dev/null || true)
+
+if [[ -n "$EXISTING_CERT" ]]; then
+  if echo "$EXISTING_CERT" | openssl x509 -noout >/dev/null 2>&1; then
+    if echo "$EXISTING_CERT" | openssl x509 -noout -checkend $((20*86400)) >/dev/null; then
+      echo "Cert still valid for >20 days, skipping renewal"
+      exit 0
+    fi
+    echo "Cert expires within 20 days, renewing"
+  else
+    echo "Existing route cert invalid/unreadable, forcing renewal"
+  fi
+else
+  echo "Route ${ROUTE_NAME} not found, initial creation"
+fi
+
+echo "Renewing certs via sidecar"
+/etc/scripts/create-cert.sh
+
+for f in "$CERT" "$KEY" "$CA" "$DEST_CA"; do
+  if [[ ! -s "$f" ]]; then
+    echo "ERROR: missing or empty: $f" >&2
+    exit 1
+  fi
+done
+
+openssl x509 -in "$CERT" -noout >/dev/null 2>&1 || { echo "ERROR: invalid cert"; exit 1; }
+openssl rsa -in "$KEY" -check -noout >/dev/null 2>&1 || { echo "ERROR: invalid private key"; exit 1; }
+openssl x509 -in "$CA" -noout >/dev/null 2>&1 || { echo "ERROR: invalid issuing CA"; exit 1; }
+openssl x509 -in "$DEST_CA" -noout >/dev/null 2>&1 || { echo "ERROR: invalid destination CA"; exit 1; }
+
+cert_pub=$(openssl x509 -in "$CERT" -noout -pubkey | openssl pkey -pubin -outform pem)
+key_pub=$(openssl pkey -in "$KEY" -pubout -outform pem)
+
+if [[ "$cert_pub" != "$key_pub" ]]; then
+  echo "ERROR: certificate and private key do not match" >&2
+  exit 1
+fi
+
+CERT_SERIAL=$(openssl x509 -in "$CERT" -noout -serial | cut -d= -f2)
+CERT_ENDDATE=$(openssl x509 -in "$CERT" -noout -enddate | cut -d= -f2)
+ROTATION_TS=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+PATCH=$(cat <<EOF
+{
+  "metadata": {
+    "labels": {
+      "app": "sugar-backend",
+      "appcode": "{{ .Values.global.appCode }}",
+      "function": "backend",
+      "tier": "A",
+      "sfm-app": "{{ .Values.backend.sfm.sfmapp }}",
+      "sfm-loc": "{{ .Values.backend.sfm.sfmloc }}",
+      "sfm-role": "{{ .Values.backend.sfm.sfmrole }}",
+      "sfm-env": "{{ .Values.backend.sfm.sfmenv }}",
+      "opscontact": "{{ .Values.global.opsContact }}"
+    },
+    "annotations": {
+      "cert.rotation.timestamp": "${ROTATION_TS}",
+      "cert.serial": "${CERT_SERIAL}",
+      "cert.not-after": "${CERT_ENDDATE}"
+    }
+  }
+}
+EOF
+)
+
+oc create route reencrypt "${ROUTE_NAME}" \
+  --service=http-sugar-backend \
+  --hostname="{{ .Values.backend.host }}" \
+  --port=https \
+  --cert="$CERT" --key="$KEY" \
+  --ca-cert="$CA" --dest-ca-cert="$DEST_CA" \
+  -n "${NAMESPACE}" \
+  --dry-run=client -o yaml \
+| oc patch -f - --local --type=merge -o yaml -p "${PATCH}" \
+| oc apply -n "${NAMESPACE}" -f -
+
+echo "Waiting for route admission..."
+status=""
+for i in {1..12}; do
+  status=$(oc get route "${ROUTE_NAME}" -n "${NAMESPACE}" \
+    -o jsonpath='{.status.ingress[0].conditions[?(@.type=="Admitted")].status}' 2>/dev/null || true)
+  [[ "$status" == "True" ]] && break
+  sleep 5
+done
+
+if [[ "$status" == "True" ]]; then
+  echo "Route Admitted OK"
+else
+  echo "WARNING: Route not yet Admitted after waiting"
+fi
