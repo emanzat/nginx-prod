@@ -1,4 +1,11 @@
 #!/bin/bash
+#
+# Renouvellement conditionnel de la route reencrypt OpenShift
+# - Skip si cert existant valide > 20 jours
+# - Appel Vault PKI via sidecar create-cert.sh
+# - Validation crypto algorithme-agnostique (RSA/EC)
+# - Apply idempotent via YAML inline (pas de fichier temporaire)
+#
 set -euo pipefail
 
 APP="{{ .Values.global.app }}"
@@ -10,6 +17,9 @@ KEY=/etc/route/tls/tls.key
 CA=/etc/route/tls/issuing_ca.crt
 DEST_CA=/etc/nginx/tls/issuing_ca.crt
 
+# ---------------------------------------------------------------
+# 1) Check cert existant : skip si valide > 20 jours
+# ---------------------------------------------------------------
 EXISTING_CERT=$(oc get route "${ROUTE_NAME}" -n "${NAMESPACE}" \
   -o jsonpath='{.spec.tls.certificate}' 2>/dev/null || true)
 
@@ -27,9 +37,15 @@ else
   echo "Route ${ROUTE_NAME} not found, initial creation"
 fi
 
+# ---------------------------------------------------------------
+# 2) Génération des certificats via sidecar Vault PKI
+# ---------------------------------------------------------------
 echo "Renewing certs via sidecar"
 /etc/scripts/create-cert.sh
 
+# ---------------------------------------------------------------
+# 3) Validation présence + intégrité
+# ---------------------------------------------------------------
 for f in "$CERT" "$KEY" "$CA" "$DEST_CA"; do
   if [[ ! -s "$f" ]]; then
     echo "ERROR: missing or empty: $f" >&2
@@ -37,58 +53,80 @@ for f in "$CERT" "$KEY" "$CA" "$DEST_CA"; do
   fi
 done
 
-openssl x509 -in "$CERT" -noout >/dev/null 2>&1 || { echo "ERROR: invalid cert"; exit 1; }
-openssl rsa -in "$KEY" -check -noout >/dev/null 2>&1 || { echo "ERROR: invalid private key"; exit 1; }
-openssl x509 -in "$CA" -noout >/dev/null 2>&1 || { echo "ERROR: invalid issuing CA"; exit 1; }
-openssl x509 -in "$DEST_CA" -noout >/dev/null 2>&1 || { echo "ERROR: invalid destination CA"; exit 1; }
+openssl x509 -in "$CERT"    -noout         >/dev/null 2>&1 || { echo "ERROR: invalid cert"        >&2; exit 1; }
+openssl pkey -in "$KEY"     -noout -check  >/dev/null 2>&1 || { echo "ERROR: invalid private key" >&2; exit 1; }
+openssl x509 -in "$CA"      -noout         >/dev/null 2>&1 || { echo "ERROR: invalid issuing CA"  >&2; exit 1; }
+openssl x509 -in "$DEST_CA" -noout         >/dev/null 2>&1 || { echo "ERROR: invalid dest CA"     >&2; exit 1; }
 
-cert_pub=$(openssl x509 -in "$CERT" -noout -pubkey | openssl pkey -pubin -outform pem)
-key_pub=$(openssl pkey -in "$KEY" -pubout -outform pem)
-
+# Cohérence cert/clé (pubkey DER hash, algo-agnostique)
+cert_pub=$(openssl x509 -in "$CERT" -noout -pubkey | openssl pkey -pubin -outform DER | sha256sum)
+key_pub=$( openssl pkey -in "$KEY"  -pubout         -outform DER | sha256sum)
 if [[ "$cert_pub" != "$key_pub" ]]; then
   echo "ERROR: certificate and private key do not match" >&2
   exit 1
 fi
 
+# ---------------------------------------------------------------
+# 4) Construction du manifeste Route + apply idempotent
+# ---------------------------------------------------------------
+indent() { sed 's/^/      /'; }
+
+CERT_CONTENT=$(indent < "$CERT")
+KEY_CONTENT=$(indent < "$KEY")
+CA_CONTENT=$(indent < "$CA")
+DEST_CA_CONTENT=$(indent < "$DEST_CA")
+
 CERT_SERIAL=$(openssl x509 -in "$CERT" -noout -serial | cut -d= -f2)
 CERT_ENDDATE=$(openssl x509 -in "$CERT" -noout -enddate | cut -d= -f2)
 ROTATION_TS=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
-PATCH=$(cat <<EOF
-{
-  "metadata": {
-    "labels": {
-      "app": "sugar-backend",
-      "appcode": "{{ .Values.global.appCode }}",
-      "function": "backend",
-      "tier": "A",
-      "sfm-app": "{{ .Values.backend.sfm.sfmapp }}",
-      "sfm-loc": "{{ .Values.backend.sfm.sfmloc }}",
-      "sfm-role": "{{ .Values.backend.sfm.sfmrole }}",
-      "sfm-env": "{{ .Values.backend.sfm.sfmenv }}",
-      "opscontact": "{{ .Values.global.opsContact }}"
-    },
-    "annotations": {
-      "cert.rotation.timestamp": "${ROTATION_TS}",
-      "cert.serial": "${CERT_SERIAL}",
-      "cert.not-after": "${CERT_ENDDATE}"
-    }
-  }
-}
+echo "Applying route ${ROUTE_NAME} (serial=${CERT_SERIAL}, notAfter=${CERT_ENDDATE})"
+
+cat <<EOF | oc apply -n "${NAMESPACE}" -f -
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: ${ROUTE_NAME}
+  namespace: ${NAMESPACE}
+  labels:
+    app: sugar-backend
+    appcode: "{{ .Values.global.appCode }}"
+    function: backend
+    tier: "A"
+    sfm-app: "{{ .Values.backend.sfm.sfmapp }}"
+    sfm-loc: "{{ .Values.backend.sfm.sfmloc }}"
+    sfm-role: "{{ .Values.backend.sfm.sfmrole }}"
+    sfm-env: "{{ .Values.backend.sfm.sfmenv }}"
+    opscontact: "{{ .Values.global.opsContact }}"
+  annotations:
+    cert.rotation.timestamp: "${ROTATION_TS}"
+    cert.serial: "${CERT_SERIAL}"
+    cert.not-after: "${CERT_ENDDATE}"
+spec:
+  host: "{{ .Values.backend.host }}"
+  to:
+    kind: Service
+    name: http-sugar-backend
+    weight: 100
+  port:
+    targetPort: https
+  tls:
+    termination: reencrypt
+    insecureEdgeTerminationPolicy: Redirect
+    certificate: |
+${CERT_CONTENT}
+    key: |
+${KEY_CONTENT}
+    caCertificate: |
+${CA_CONTENT}
+    destinationCACertificate: |
+${DEST_CA_CONTENT}
+  wildcardPolicy: None
 EOF
-)
 
-oc create route reencrypt "${ROUTE_NAME}" \
-  --service=http-sugar-backend \
-  --hostname="{{ .Values.backend.host }}" \
-  --port=https \
-  --cert="$CERT" --key="$KEY" \
-  --ca-cert="$CA" --dest-ca-cert="$DEST_CA" \
-  -n "${NAMESPACE}" \
-  --dry-run=client -o yaml \
-| oc patch -f - --local --type=merge -o yaml -p "${PATCH}" \
-| oc apply -n "${NAMESPACE}" -f -
-
+# ---------------------------------------------------------------
+# 5) Vérification d'admission (60s max, non bloquant)
+# ---------------------------------------------------------------
 echo "Waiting for route admission..."
 status=""
 for i in {1..12}; do
@@ -101,5 +139,5 @@ done
 if [[ "$status" == "True" ]]; then
   echo "Route Admitted OK"
 else
-  echo "WARNING: Route not yet Admitted after waiting"
+  echo "WARNING: Route not yet Admitted after 60s (status='$status')"
 fi
