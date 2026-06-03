@@ -1,0 +1,145 @@
+<mxfile host="app.diagrams.net" type="device">
+  <diagram name="Control-M HA 2 AZ" id="controlm-ha-2az">
+    <mxGraphModel dx="1422" dy="820" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1300" pageHeight="850" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- Title -->
+        <mxCell id="title" value="&lt;b&gt;Control-M — Architecture HA Actif/Passif sur 2 AZ&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;fontSize=22;fontColor=#1F3B57;" vertex="1" parent="1">
+          <mxGeometry x="40" y="10" width="1220" height="34" as="geometry" />
+        </mxCell>
+        <mxCell id="subtitle" value="Classification de service : Extreme  •  Failover Mode : HA  •  Une région / Deux zones de disponibilité" style="text;html=1;align=center;verticalAlign=middle;fontSize=12;fontColor=#5A6B7B;" vertex="1" parent="1">
+          <mxGeometry x="40" y="46" width="1220" height="22" as="geometry" />
+        </mxCell>
+
+        <!-- Region container -->
+        <mxCell id="region" value="" style="rounded=1;html=1;dashed=1;dashPattern=8 6;strokeColor=#9BB0C4;fillColor=none;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="40" y="190" width="1220" height="548" as="geometry" />
+        </mxCell>
+        <mxCell id="regionLabel" value="&lt;b&gt;RÉGION (Minimum : One)&lt;/b&gt;" style="rounded=1;html=1;fillColor=#9BB0C4;strokeColor=none;fontColor=#FFFFFF;fontSize=12;verticalAlign=middle;align=center;" vertex="1" parent="1">
+          <mxGeometry x="50" y="200" width="230" height="30" as="geometry" />
+        </mxCell>
+
+        <!-- AZ1 body + header -->
+        <mxCell id="az1body" value="" style="rounded=1;html=1;fillColor=#EAF2FB;strokeColor=#1F4E79;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="80" y="250" width="500" height="436" as="geometry" />
+        </mxCell>
+        <mxCell id="az1header" value="&lt;b&gt;AZ 1 — Site 1&lt;/b&gt;" style="rounded=1;html=1;fillColor=#1F4E79;strokeColor=none;fontColor=#FFFFFF;fontSize=15;verticalAlign=middle;align=center;" vertex="1" parent="1">
+          <mxGeometry x="80" y="250" width="500" height="46" as="geometry" />
+        </mxCell>
+        <mxCell id="az1badge" value="&lt;b&gt;ACTIF&lt;/b&gt;" style="rounded=1;html=1;fillColor=#2D6A4F;strokeColor=none;fontColor=#FFFFFF;fontSize=12;verticalAlign=middle;align=center;arcSize=50;" vertex="1" parent="1">
+          <mxGeometry x="452" y="259" width="112" height="28" as="geometry" />
+        </mxCell>
+
+        <!-- Control-M Primary -->
+        <mxCell id="cmp" value="&lt;b&gt;Control-M/Server — PRIMAIRE&lt;/b&gt;&lt;br&gt;Nœud actif • production en cours&lt;br&gt;Configuration Agent (life-check ≈ 60 s)" style="rounded=1;html=1;fillColor=#FFFFFF;strokeColor=#1F4E79;strokeWidth=2;fontSize=12;fontColor=#1F3B57;verticalAlign=middle;align=center;" vertex="1" parent="1">
+          <mxGeometry x="120" y="330" width="420" height="104" as="geometry" />
+        </mxCell>
+
+        <!-- Oracle Exadata RAC Primary -->
+        <mxCell id="orap" value="&lt;b&gt;Oracle Exadata — RAC (PRIMAIRE)&lt;/b&gt;&lt;br&gt;Cluster actif/actif multi-instances&lt;br&gt;Données Control-M (EM + Server)" style="rounded=1;html=1;fillColor=#FFF4EC;strokeColor=#C0623A;strokeWidth=2;fontSize=12;fontColor=#8A3D18;verticalAlign=top;align=center;spacingTop=12;" vertex="1" parent="1">
+          <mxGeometry x="120" y="486" width="420" height="152" as="geometry" />
+        </mxCell>
+        <mxCell id="orapbadge" value="&lt;b&gt;Data Guard SYNC → RPO ≈ 0&lt;/b&gt;" style="rounded=1;html=1;fillColor=#2D6A4F;strokeColor=none;fontColor=#FFFFFF;fontSize=12;verticalAlign=middle;align=center;arcSize=50;" vertex="1" parent="1">
+          <mxGeometry x="170" y="598" width="320" height="30" as="geometry" />
+        </mxCell>
+
+        <!-- AZ2 body + header -->
+        <mxCell id="az2body" value="" style="rounded=1;html=1;fillColor=#F0F2F5;strokeColor=#7A8A9A;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="700" y="250" width="500" height="436" as="geometry" />
+        </mxCell>
+        <mxCell id="az2header" value="&lt;b&gt;AZ 2 — Site 2&lt;/b&gt;" style="rounded=1;html=1;fillColor=#5A6B7B;strokeColor=none;fontColor=#FFFFFF;fontSize=15;verticalAlign=middle;align=center;" vertex="1" parent="1">
+          <mxGeometry x="700" y="250" width="500" height="46" as="geometry" />
+        </mxCell>
+        <mxCell id="az2badge" value="&lt;b&gt;STANDBY&lt;/b&gt;" style="rounded=1;html=1;fillColor=#D4A017;strokeColor=none;fontColor=#FFFFFF;fontSize=12;verticalAlign=middle;align=center;arcSize=50;" vertex="1" parent="1">
+          <mxGeometry x="1062" y="259" width="126" height="28" as="geometry" />
+        </mxCell>
+
+        <!-- Control-M Secondary -->
+        <mxCell id="cms" value="&lt;b&gt;Control-M/Server — SECONDAIRE&lt;/b&gt;&lt;br&gt;Nœud passif • prêt à reprendre&lt;br&gt;Reprise auto si primaire indisponible" style="rounded=1;html=1;fillColor=#FFFFFF;strokeColor=#7A8A9A;strokeWidth=2;fontSize=12;fontColor=#3B4A59;verticalAlign=middle;align=center;" vertex="1" parent="1">
+          <mxGeometry x="740" y="330" width="420" height="104" as="geometry" />
+        </mxCell>
+
+        <!-- Oracle Exadata RAC Standby -->
+        <mxCell id="oras" value="&lt;b&gt;Oracle Exadata — RAC (STANDBY)&lt;/b&gt;&lt;br&gt;Standby Data Guard synchrone&lt;br&gt;Promu lors de la bascule (switchover)" style="rounded=1;html=1;fillColor=#FBF3EC;strokeColor=#B08A6A;strokeWidth=2;fontSize=12;fontColor=#7A5638;verticalAlign=top;align=center;spacingTop=12;" vertex="1" parent="1">
+          <mxGeometry x="740" y="486" width="420" height="152" as="geometry" />
+        </mxCell>
+        <mxCell id="orasbadge" value="&lt;b&gt;Mode dégradé : async si incident réseau&lt;/b&gt;" style="rounded=1;html=1;fillColor=#7A8A9A;strokeColor=none;fontColor=#FFFFFF;fontSize=11;verticalAlign=middle;align=center;arcSize=50;" vertex="1" parent="1">
+          <mxGeometry x="772" y="598" width="356" height="30" as="geometry" />
+        </mxCell>
+
+        <!-- F5 -->
+        <mxCell id="f5" value="&lt;b&gt;F5 BIG-IP (LTM)&lt;/b&gt;&lt;br&gt;Aiguillage du trafic vers le nœud actif" style="rounded=1;html=1;fillColor=#1F4E79;strokeColor=none;fontColor=#FFFFFF;fontSize=12;verticalAlign=middle;align=center;" vertex="1" parent="1">
+          <mxGeometry x="510" y="92" width="280" height="58" as="geometry" />
+        </mxCell>
+
+        <!-- Edge: F5 -> Control-M Primary (active traffic) -->
+        <mxCell id="e_f5_cmp" value="trafic actif" style="endArrow=classic;html=1;rounded=0;strokeColor=#1F4E79;strokeWidth=3;fontColor=#1F4E79;fontStyle=1;fontSize=11;exitX=0.4;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="f5" target="cmp">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Edge: F5 -> Control-M Secondary (standby) -->
+        <mxCell id="e_f5_cms" value="en attente" style="endArrow=classic;html=1;rounded=0;dashed=1;dashPattern=7 5;strokeColor=#7A8A9A;strokeWidth=2;fontColor=#7A8A9A;fontSize=11;exitX=0.6;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="f5" target="cms">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Edge: Control-M Primary -> Secondary (failover) -->
+        <mxCell id="e_failover" value="&lt;b&gt;Failover AUTOMATIQUE&lt;/b&gt;" style="endArrow=classic;html=1;rounded=0;dashed=1;dashPattern=8 5;strokeColor=#C0392B;strokeWidth=3;fontColor=#FFFFFF;fontSize=11;labelBackgroundColor=#C0392B;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="cmp" target="cms">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Edge: Oracle Primary <-> Secondary (synchronous replication) -->
+        <mxCell id="e_repl" value="&lt;b&gt;Réplication SYNCHRONE — Data Guard SYNC&lt;/b&gt;" style="endArrow=classic;startArrow=classic;html=1;rounded=0;strokeColor=#2D6A4F;strokeWidth=3.5;fontColor=#FFFFFF;fontSize=11;labelBackgroundColor=#2D6A4F;exitX=1;exitY=0.45;exitDx=0;exitDy=0;entryX=0;entryY=0.45;entryDx=0;entryDy=0;" edge="1" parent="1" source="orap" target="oras">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Legend container -->
+        <mxCell id="legend" value="" style="rounded=1;html=1;fillColor=#FFFFFF;strokeColor=#D4DCE4;strokeWidth=1.5;" vertex="1" parent="1">
+          <mxGeometry x="40" y="752" width="1220" height="56" as="geometry" />
+        </mxCell>
+        <!-- Legend item 1 -->
+        <mxCell id="lg1" value="" style="endArrow=classic;html=1;strokeColor=#1F4E79;strokeWidth=3;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="70" y="780" as="sourcePoint" />
+            <mxPoint x="112" y="780" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="lg1t" value="Chemin de trafic actif" style="text;html=1;align=left;verticalAlign=middle;fontSize=12;fontColor=#3B4A59;" vertex="1" parent="1">
+          <mxGeometry x="120" y="768" width="170" height="24" as="geometry" />
+        </mxCell>
+        <!-- Legend item 2 -->
+        <mxCell id="lg2" value="" style="endArrow=classic;html=1;dashed=1;dashPattern=8 5;strokeColor=#C0392B;strokeWidth=3;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="300" y="780" as="sourcePoint" />
+            <mxPoint x="342" y="780" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="lg2t" value="Failover automatique (~60 s)" style="text;html=1;align=left;verticalAlign=middle;fontSize=12;fontColor=#3B4A59;" vertex="1" parent="1">
+          <mxGeometry x="350" y="768" width="220" height="24" as="geometry" />
+        </mxCell>
+        <!-- Legend item 3 -->
+        <mxCell id="lg3" value="" style="endArrow=classic;html=1;strokeColor=#2D6A4F;strokeWidth=3.5;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="620" y="780" as="sourcePoint" />
+            <mxPoint x="662" y="780" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="lg3t" value="Réplication Oracle synchrone (RPO ≈ 0)" style="text;html=1;align=left;verticalAlign=middle;fontSize=12;fontColor=#3B4A59;" vertex="1" parent="1">
+          <mxGeometry x="670" y="768" width="280" height="24" as="geometry" />
+        </mxCell>
+        <!-- Legend item 4 -->
+        <mxCell id="lg4" value="" style="endArrow=classic;html=1;dashed=1;dashPattern=7 5;strokeColor=#7A8A9A;strokeWidth=2.5;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="990" y="780" as="sourcePoint" />
+            <mxPoint x="1032" y="780" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="lg4t" value="Nœud en attente" style="text;html=1;align=left;verticalAlign=middle;fontSize=12;fontColor=#3B4A59;" vertex="1" parent="1">
+          <mxGeometry x="1040" y="768" width="180" height="24" as="geometry" />
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
