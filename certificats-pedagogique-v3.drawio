@@ -1,0 +1,523 @@
+<mxfile host="Electron" agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/29.0.3 Chrome/140.0.7339.249 Electron/38.7.0 Safari/537.36" version="29.0.3">
+  <diagram id="rrwAt_hq48zf7gwXXLzD" name="Page-1">
+    <mxGraphModel dx="2066" dy="1145" grid="0" gridSize="10" guides="1" tooltips="1" connect="0" arrows="0" fold="0" page="1" pageScale="1" pageWidth="2000" pageHeight="2650" math="0" shadow="1">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="main_title" value="🔐 Comprendre les Certificats TLS — Du Bar au Cloud Native" style="text;html=1;fillColor=#1a1a2e;strokeColor=none;align=center;fontSize=26;fontStyle=1;fontColor=#ffffff;rounded=1;arcSize=6;" parent="1" vertex="1">
+          <mxGeometry x="80" y="25" width="1840" height="58" as="geometry" />
+        </mxCell>
+        <mxCell id="band1" value="ÉTAPE 1 — Commençons par la vraie vie 🍺" style="text;html=1;fillColor=#d4a840;strokeColor=none;align=left;fontSize=16;fontStyle=1;fontColor=#1a1a2e;rounded=1;arcSize=30;" parent="1" vertex="1">
+          <mxGeometry x="80" y="103" width="1840" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="scene_bg" value="" style="rounded=1;fillColor=#f5f0e8;strokeColor=#d4a840;strokeWidth=2;arcSize=6;" parent="1" vertex="1">
+          <mxGeometry x="80" y="155" width="1840" height="350" as="geometry" />
+        </mxCell>
+        <mxCell id="scene_intro" value="🍺 Tu veux entrer dans un bar. Le videur te demande ta carte d&#39;identité..." style="text;html=1;fillColor=none;strokeColor=none;align=left;fontSize=14;fontStyle=2;fontColor=#6b4226;" parent="1" vertex="1">
+          <mxGeometry x="105" y="163" width="900" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="v_body" value="" style="ellipse;fillColor=#4a7c59;strokeColor=#2d6a4f;strokeWidth=2;" parent="1" vertex="1">
+          <mxGeometry x="120" y="205" width="70" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="v_face" value="😊" style="text;html=1;fillColor=none;strokeColor=none;align=center;fontSize=28;" parent="1" vertex="1">
+          <mxGeometry x="120" y="213" width="70" height="46" as="geometry" />
+        </mxCell>
+        <mxCell id="v_lbl" value="Toi (visiteur)" style="text;html=1;fillColor=none;strokeColor=none;align=center;fontSize=12;fontStyle=1;fontColor=#2d6a4f;" parent="1" vertex="1">
+          <mxGeometry x="105" y="280" width="100" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="bub_v" value="« Je voudrais entrer... »" style="rounded=1;fillColor=#e8f5e9;strokeColor=#2d6a4f;align=center;fontSize=12;fontColor=#1a3d2b;arcSize=30;" parent="1" vertex="1">
+          <mxGeometry x="205" y="220" width="195" height="38" as="geometry" />
+        </mxCell>
+        <mxCell id="id_card" value="" style="rounded=1;fillColor=#1a1a2e;strokeColor=#d4a840;strokeWidth=3;arcSize=8;" parent="1" vertex="1">
+          <mxGeometry x="320" y="275" width="155" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="idc_t" value="CARTE NATIONALE D&#39;IDENTITÉ" style="text;html=1;fillColor=none;strokeColor=none;align=center;fontSize=8;fontStyle=1;fontColor=#d4a840;" parent="1" vertex="1">
+          <mxGeometry x="320" y="280" width="155" height="14" as="geometry" />
+        </mxCell>
+        <mxCell id="idc_n" value="Nom : DUPONT Jean" style="text;html=1;fillColor=none;strokeColor=none;align=left;fontSize=10;fontColor=#ffffff;" parent="1" vertex="1">
+          <mxGeometry x="330" y="297" width="140" height="15" as="geometry" />
+        </mxCell>
+        <mxCell id="idc_d" value="Né le : 12/03/1998" style="text;html=1;fillColor=none;strokeColor=none;align=left;fontSize=10;fontColor=#ffffff;" parent="1" vertex="1">
+          <mxGeometry x="330" y="313" width="140" height="15" as="geometry" />
+        </mxCell>
+        <mxCell id="idc_e" value="Expire : 12/03/2028" style="text;html=1;fillColor=none;strokeColor=none;align=left;fontSize=10;fontColor=#a8d8a8;" parent="1" vertex="1">
+          <mxGeometry x="330" y="329" width="140" height="15" as="geometry" />
+        </mxCell>
+        <mxCell id="idc_s" value="✍️ Préfecture de Paris" style="text;html=1;fillColor=none;strokeColor=none;align=left;fontSize=9;fontColor=#d4a840;" parent="1" vertex="1">
+          <mxGeometry x="330" y="345" width="140" height="14" as="geometry" />
+        </mxCell>
+        <mxCell id="vid_body" value="" style="ellipse;fillColor=#c0392b;strokeColor=#922b21;strokeWidth=2;" parent="1" vertex="1">
+          <mxGeometry x="505" y="205" width="70" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="vid_face" value="😐" style="text;html=1;fillColor=none;strokeColor=none;align=center;fontSize=28;" parent="1" vertex="1">
+          <mxGeometry x="505" y="213" width="70" height="46" as="geometry" />
+        </mxCell>
+        <mxCell id="vid_lbl" value="Agent de secu" style="text;html=1;fillColor=none;strokeColor=none;align=center;fontSize=12;fontStyle=1;fontColor=#c0392b;" parent="1" vertex="1">
+          <mxGeometry x="493" y="280" width="94" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="chk1" value="1️⃣ Regarde le NOM" style="rounded=1;fillColor=#fdf8e1;strokeColor=#d4a840;align=left;fontSize=12;fontColor=#6b4226;arcSize=15;" parent="1" vertex="1">
+          <mxGeometry x="600" y="205" width="258" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="chk2" value="2️⃣ Vérifie qu&#39;elle n&#39;est pas PÉRIMÉE" style="rounded=1;fillColor=#fdf8e1;strokeColor=#d4a840;align=left;fontSize=12;fontColor=#6b4226;arcSize=15;" parent="1" vertex="1">
+          <mxGeometry x="600" y="243" width="259" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="chk3" value="3️⃣ Vérifie l&#39;HOLOGRAMME (pas fausse)" style="rounded=1;fillColor=#fdf8e1;strokeColor=#d4a840;align=left;fontSize=12;fontColor=#6b4226;arcSize=15;" parent="1" vertex="1">
+          <mxGeometry x="600" y="281" width="261" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="chk4" value="4️⃣ Appelle la préfecture si carte signalée volée" style="rounded=1;fillColor=#fdecea;strokeColor=#c0392b;align=left;fontSize=12;fontColor=#c0392b;arcSize=15;" parent="1" vertex="1">
+          <mxGeometry x="600" y="319" width="262" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="res_ok" value="✅ OK, tu entres !" style="rounded=1;fillColor=#e8f5e9;strokeColor=#2d6a4f;strokeWidth=2;align=center;fontSize=13;fontStyle=1;fontColor=#1a3d2b;arcSize=15;" parent="1" vertex="1">
+          <mxGeometry x="881" y="212" width="338" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="res_ko" value="❌ Carte fausse/périmée/signalée volée ?&#xa;Tu restes dehors !" style="rounded=1;fillColor=#fdecea;strokeColor=#c0392b;strokeWidth=2;align=center;fontSize=13;fontStyle=1;fontColor=#c0392b;arcSize=15;" parent="1" vertex="1">
+          <mxGeometry x="882" y="263" width="338" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="sep1" value="" style="line;strokeColor=#1a1a2e;strokeWidth=4;" parent="1" vertex="1">
+          <mxGeometry x="1060" y="163" width="4" height="330" as="geometry" />
+        </mxCell>
+        <mxCell id="sep_lbl" value="🌐 Sur Internet,&#xa;c&#39;est pareil !" style="text;html=1;fillColor=none;strokeColor=none;align=center;fontSize=15;fontStyle=1;fontColor=#1a1a2e;" parent="1" vertex="1">
+          <mxGeometry x="1115" y="342" width="175" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="sep_arr" value="" style="shape=mxgraph.arrows2.arrow;fillColor=#1a1a2e;strokeColor=none;direction=east;" parent="1" vertex="1">
+          <mxGeometry x="1255" y="318" width="70" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="eq_bg" value="" style="rounded=1;fillColor=#e3f2fd;strokeColor=#1565c0;strokeWidth=2;arcSize=8;" parent="1" vertex="1">
+          <mxGeometry x="1335" y="168" width="560" height="325" as="geometry" />
+        </mxCell>
+        <mxCell id="eq_ttl" value="🌐 Les équivalences Internet" style="text;html=1;fillColor=none;strokeColor=none;align=center;fontSize=14;fontStyle=1;fontColor=#1565c0;" parent="1" vertex="1">
+          <mxGeometry x="1335" y="173" width="560" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="eq1l" value="😊 Toi (visiteur)" style="text;html=1;fillColor=none;strokeColor=none;align=left;fontSize=13;fontColor=#1a1a2e;" parent="1" vertex="1">
+          <mxGeometry x="1350" y="212" width="200" height="23" as="geometry" />
+        </mxCell>
+        <mxCell id="eq1r" value="➡️  Ton navigateur (Chrome, Firefox…)" style="rounded=1;fillColor=#d1ecf1;strokeColor=#1565c0;align=left;fontSize=12;fontColor=#1565c0;arcSize=20;" parent="1" vertex="1">
+          <mxGeometry x="1555" y="208" width="325" height="31" as="geometry" />
+        </mxCell>
+        <mxCell id="eq2l" value="😐 Agent de secu" style="text;html=1;fillColor=none;strokeColor=none;align=left;fontSize=13;fontColor=#1a1a2e;" parent="1" vertex="1">
+          <mxGeometry x="1350" y="252" width="200" height="23" as="geometry" />
+        </mxCell>
+        <mxCell id="eq2r" value="➡️  Le navigateur qui vérifie le cert" style="rounded=1;fillColor=#d1ecf1;strokeColor=#1565c0;align=left;fontSize=12;fontColor=#1565c0;arcSize=20;" parent="1" vertex="1">
+          <mxGeometry x="1555" y="248" width="325" height="31" as="geometry" />
+        </mxCell>
+        <mxCell id="eq3l" value="🪪 La carte d&#39;identité" style="text;html=1;fillColor=none;strokeColor=none;align=left;fontSize=13;fontColor=#1a1a2e;" parent="1" vertex="1">
+          <mxGeometry x="1350" y="292" width="200" height="23" as="geometry" />
+        </mxCell>
+        <mxCell id="eq3r" value="➡️  Le Certificat TLS du site" style="rounded=1;fillColor=#fdf8e1;strokeColor=#d4a840;align=left;fontSize=12;fontColor=#6b4226;arcSize=20;fontStyle=1;" parent="1" vertex="1">
+          <mxGeometry x="1555" y="288" width="325" height="31" as="geometry" />
+        </mxCell>
+        <mxCell id="eq4l" value="🏛️ La Préfecture" style="text;html=1;fillColor=none;strokeColor=none;align=left;fontSize=13;fontColor=#1a1a2e;" parent="1" vertex="1">
+          <mxGeometry x="1350" y="332" width="200" height="23" as="geometry" />
+        </mxCell>
+        <mxCell id="eq4r" value="➡️  L&#39;Autorité de Certification (CA)" style="rounded=1;fillColor=#fdecea;strokeColor=#c0392b;align=left;fontSize=12;fontColor=#c0392b;arcSize=20;fontStyle=1;" parent="1" vertex="1">
+          <mxGeometry x="1555" y="328" width="325" height="31" as="geometry" />
+        </mxCell>
+        <mxCell id="eq5l" value="📅 Date d&#39;expiration" style="text;html=1;fillColor=none;strokeColor=none;align=left;fontSize=13;fontColor=#1a1a2e;" parent="1" vertex="1">
+          <mxGeometry x="1350" y="372" width="200" height="23" as="geometry" />
+        </mxCell>
+        <mxCell id="eq5r" value="➡️  Date d&#39;expiration du certificat" style="rounded=1;fillColor=#e8f5e9;strokeColor=#2d6a4f;align=left;fontSize=12;fontColor=#2d6a4f;arcSize=20;" parent="1" vertex="1">
+          <mxGeometry x="1555" y="368" width="325" height="31" as="geometry" />
+        </mxCell>
+        <mxCell id="eq6l" value="📞 Appel préfecture (volée ?)" style="text;html=1;fillColor=none;strokeColor=none;align=left;fontSize=13;fontColor=#1a1a2e;" parent="1" vertex="1">
+          <mxGeometry x="1350" y="412" width="200" height="23" as="geometry" />
+        </mxCell>
+        <mxCell id="eq6r" value="➡️  Vérification OCSP / CRL (révoqué ?)" style="rounded=1;fillColor=#fdecea;strokeColor=#c0392b;align=left;fontSize=12;fontColor=#c0392b;arcSize=20;fontStyle=1;" parent="1" vertex="1">
+          <mxGeometry x="1555" y="408" width="325" height="31" as="geometry" />
+        </mxCell>
+        <mxCell id="band2" value="ÉTAPE 2 — Le Certificat : identité d&#39;abord, chiffrement ensuite 📜" style="text;html=1;fillColor=#4a7c59;strokeColor=none;align=left;fontSize=16;fontStyle=1;fontColor=#ffffff;rounded=1;arcSize=30;" parent="1" vertex="1">
+          <mxGeometry x="80" y="523" width="1840" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="cert_sec_bg" value="" style="rounded=1;fillColor=#f5f0e8;strokeColor=#4a7c59;strokeWidth=2;arcSize=6;" parent="1" vertex="1">
+          <mxGeometry x="80" y="575" width="1840" height="340" as="geometry" />
+        </mxCell>
+        <mxCell id="cert_card" value="" style="rounded=1;fillColor=#1a1a2e;strokeColor=#d4a840;strokeWidth=3;arcSize=8;" parent="1" vertex="1">
+          <mxGeometry x="105" y="593" width="530" height="300" as="geometry" />
+        </mxCell>
+        <mxCell id="cert_hdr" value="📜  CERTIFICAT TLS — mabanque.fr" style="text;html=1;fillColor=#d4a840;strokeColor=none;align=center;fontSize=13;fontStyle=1;fontColor=#1a1a2e;rounded=1;" parent="1" vertex="1">
+          <mxGeometry x="105" y="593" width="530" height="33" as="geometry" />
+        </mxCell>
+        <mxCell id="cf1k" value="🌍 Sujet :" style="text;html=1;fillColor=none;strokeColor=none;align=left;fontSize=12;fontColor=#d4a840;fontStyle=1;" parent="1" vertex="1">
+          <mxGeometry x="118" y="634" width="140" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="cf1v" value="mabanque.fr" style="text;html=1;fillColor=none;strokeColor=none;align=left;fontSize=12;fontColor=#ffffff;" parent="1" vertex="1">
+          <mxGeometry x="268" y="634" width="355" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="cf2k" value="🏛️ Émetteur :" style="text;html=1;fillColor=none;strokeColor=none;align=left;fontSize=12;fontColor=#d4a840;fontStyle=1;" parent="1" vertex="1">
+          <mxGeometry x="118" y="660" width="140" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="cf2v" value="Let&#39;s Encrypt Authority X3" style="text;html=1;fillColor=none;strokeColor=none;align=left;fontSize=12;fontColor=#ffffff;" parent="1" vertex="1">
+          <mxGeometry x="268" y="660" width="355" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="cf3k" value="📅 Validité :" style="text;html=1;fillColor=none;strokeColor=none;align=left;fontSize=12;fontColor=#d4a840;fontStyle=1;" parent="1" vertex="1">
+          <mxGeometry x="118" y="686" width="140" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="cf3v" value="01/01/2025 → 01/01/2026" style="text;html=1;fillColor=none;strokeColor=none;align=left;fontSize=12;fontColor=#a8d8a8;" parent="1" vertex="1">
+          <mxGeometry x="268" y="686" width="355" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="cf4k" value="📢 Clé publique :" style="text;html=1;fillColor=none;strokeColor=none;align=left;fontSize=12;fontColor=#d4a840;fontStyle=1;" parent="1" vertex="1">
+          <mxGeometry x="118" y="712" width="140" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="cf4v" value="3082 0282 01AA... (partagée librement)" style="text;html=1;fillColor=none;strokeColor=none;align=left;fontSize=11;fontColor=#80cbc4;" parent="1" vertex="1">
+          <mxGeometry x="268" y="712" width="355" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="cf5k" value="✍️ Signature CA :" style="text;html=1;fillColor=none;strokeColor=none;align=left;fontSize=12;fontColor=#d4a840;fontStyle=1;" parent="1" vertex="1">
+          <mxGeometry x="118" y="738" width="140" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="cf5v" value="SHA256:A1:B2:C3:D4... (infalsifiable)" style="text;html=1;fillColor=none;strokeColor=none;align=left;fontSize=11;fontColor=#ff8a80;" parent="1" vertex="1">
+          <mxGeometry x="268" y="738" width="355" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="cf_seal" value="🔒 VALID" style="ellipse;fillColor=#2d6a4f;strokeColor=#d4a840;strokeWidth=3;align=center;fontSize=14;fontStyle=1;fontColor=#d4a840;" parent="1" vertex="1">
+          <mxGeometry x="468" y="775" width="140" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="role_bg" value="" style="rounded=1;fillColor=#fdf8e1;strokeColor=#d4a840;strokeWidth=2;arcSize=8;" parent="1" vertex="1">
+          <mxGeometry x="660" y="593" width="560" height="300" as="geometry" />
+        </mxCell>
+        <mxCell id="role_ttl" value="💡 Le certificat sert à QUOI exactement ?" style="text;html=1;fillColor=none;strokeColor=none;align=left;fontSize=14;fontStyle=1;fontColor=#6b4226;" parent="1" vertex="1">
+          <mxGeometry x="675" y="600" width="530" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="role1" value="✅ 1. AUTHENTIFIER le serveur&#xa;      Prouver que tu parles bien à mabanque.fr&#xa;      et non à un imposteur (man-in-the-middle)." style="rounded=1;fillColor=#e8f5e9;strokeColor=#2d6a4f;align=left;fontSize=12;fontColor=#1a3d2b;arcSize=10;" parent="1" vertex="1">
+          <mxGeometry x="675" y="635" width="530" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="role2" value="✅ 2. ÉTABLIR un canal sécurisé (TLS)&#xa;      Permettre la négociation d&#39;une clé de session.&#xa;      C&#39;est cette clé de session qui chiffre les données." style="rounded=1;fillColor=#e8f5e9;strokeColor=#2d6a4f;align=left;fontSize=12;fontColor=#1a3d2b;arcSize=10;" parent="1" vertex="1">
+          <mxGeometry x="675" y="708" width="530" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="role_warn" value="⚠️ Idée reçue à corriger :&#xa;     Certificat ≠ chiffrement des données&#xa;     Certificat = identité + confiance → permet le chiffrement" style="rounded=1;fillColor=#fdecea;strokeColor=#c0392b;strokeWidth=2;align=left;fontSize=12;fontColor=#c0392b;arcSize=10;fontStyle=1;" parent="1" vertex="1">
+          <mxGeometry x="675" y="781" width="530" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="pk_bg" value="" style="rounded=1;fillColor=#1a1a2e;strokeColor=#c0392b;strokeWidth=3;arcSize=8;" parent="1" vertex="1">
+          <mxGeometry x="1245" y="593" width="650" height="300" as="geometry" />
+        </mxCell>
+        <mxCell id="pk_ttl" value="🔐 Clé Publique vs Clé Privée" style="text;html=1;fillColor=#c0392b;strokeColor=none;align=center;fontSize=14;fontStyle=1;fontColor=#ffffff;rounded=1;" parent="1" vertex="1">
+          <mxGeometry x="1245" y="593" width="650" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="pk_safe" value="" style="rounded=1;fillColor=#6b4226;strokeColor=#d4a840;strokeWidth=3;arcSize=5;" parent="1" vertex="1">
+          <mxGeometry x="1262" y="643" width="170" height="220" as="geometry" />
+        </mxCell>
+        <mxCell id="pk_door" value="" style="rounded=1;fillColor=#4a2610;strokeColor=#d4a840;strokeWidth=2;arcSize=5;" parent="1" vertex="1">
+          <mxGeometry x="1278" y="657" width="138" height="195" as="geometry" />
+        </mxCell>
+        <mxCell id="pk_hdl" value="🔐" style="text;html=1;fillColor=none;strokeColor=none;align=center;fontSize=22;" parent="1" vertex="1">
+          <mxGeometry x="1298" y="730" width="98" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="pk_slot" value="📩" style="text;html=1;fillColor=none;strokeColor=none;align=center;fontSize=18;" parent="1" vertex="1">
+          <mxGeometry x="1348" y="663" width="55" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="pk_pub" value="📢 Clé PUBLIQUE = La fente du coffre&#xa;→ Dans le certificat, partagée à tous&#xa;→ Sert à établir la connexion sécurisée" style="text;html=1;fillColor=none;strokeColor=none;align=left;fontSize=11;fontColor=#80cbc4;" parent="1" vertex="1">
+          <mxGeometry x="1448" y="650" width="432" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="pk_priv" value="🔐 Clé PRIVÉE = La vraie clé du coffre&#xa;→ NE QUITTE JAMAIS le serveur&#xa;→ Si volée = usurpation d&#39;identité totale ☠️" style="text;html=1;fillColor=none;strokeColor=none;align=left;fontSize=11;fontColor=#ff8a80;fontStyle=1;" parent="1" vertex="1">
+          <mxGeometry x="1448" y="718" width="432" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="pk_analogy" value="🍺 site : Si quelqu&#39;un vole ta vraie carte d&#39;identité, il entre partout à ta place !" style="rounded=1;fillColor=#fdf8e1;strokeColor=#d4a840;align=left;fontSize=11;fontColor=#6b4226;arcSize=10;fontStyle=2;" parent="1" vertex="1">
+          <mxGeometry x="1449" y="810" width="431" height="38" as="geometry" />
+        </mxCell>
+        <mxCell id="band3" value="ÉTAPE 3 — Pourquoi le navigateur fait confiance à Let&#39;s Encrypt ? 🏛️" style="text;html=1;fillColor=#6a1b9a;strokeColor=none;align=left;fontSize=16;fontStyle=1;fontColor=#ffffff;rounded=1;arcSize=30;" parent="1" vertex="1">
+          <mxGeometry x="80" y="933" width="1840" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="trust_bg" value="" style="rounded=1;fillColor=#f5f0e8;strokeColor=#6a1b9a;strokeWidth=2;arcSize=6;" parent="1" vertex="1">
+          <mxGeometry x="80" y="983" width="1840" height="330" as="geometry" />
+        </mxCell>
+        <mxCell id="trust_intro" value="❓ Question clé : Le navigateur vérifie le cert de mabanque.fr, mais comment sait-il que Let&#39;s Encrypt est fiable ?" style="text;html=1;fillColor=none;strokeColor=none;align=left;fontSize=13;fontStyle=2;fontColor=#6b4226;" parent="1" vertex="1">
+          <mxGeometry x="105" y="992" width="1600" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="root_ca" value="" style="rounded=1;fillColor=#4a148c;strokeColor=#d4a840;strokeWidth=3;arcSize=10;" parent="1" vertex="1">
+          <mxGeometry x="150" y="1030" width="260" height="85" as="geometry" />
+        </mxCell>
+        <mxCell id="root_ico" value="🌐" style="text;html=1;fillColor=none;strokeColor=none;align=center;fontSize=26;" parent="1" vertex="1">
+          <mxGeometry x="150" y="1033" width="55" height="42" as="geometry" />
+        </mxCell>
+        <mxCell id="root_ttl" value="CA RACINE" style="text;html=1;fillColor=none;strokeColor=none;align=left;fontSize=13;fontStyle=1;fontColor=#d4a840;" parent="1" vertex="1">
+          <mxGeometry x="210" y="1033" width="185" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="root_sub" value="ISRG Root X1&#xa;(Let&#39;s Encrypt)" style="text;html=1;fillColor=none;strokeColor=none;align=left;fontSize=11;fontColor=#ffffff;" parent="1" vertex="1">
+          <mxGeometry x="210" y="1054" width="185" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="arr_r_i" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#6a1b9a;strokeWidth=3;fillColor=#6a1b9a;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="root_ca" target="inter_ca" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="inter_ca" value="" style="rounded=1;fillColor=#6a1b9a;strokeColor=#d4a840;strokeWidth=2;arcSize=10;" parent="1" vertex="1">
+          <mxGeometry x="510" y="1030" width="260" height="85" as="geometry" />
+        </mxCell>
+        <mxCell id="inter_ico" value="🏛️" style="text;html=1;fillColor=none;strokeColor=none;align=center;fontSize=26;" parent="1" vertex="1">
+          <mxGeometry x="510" y="1033" width="55" height="42" as="geometry" />
+        </mxCell>
+        <mxCell id="inter_ttl" value="CA INTERMÉDIAIRE" style="text;html=1;fillColor=none;strokeColor=none;align=left;fontSize=13;fontStyle=1;fontColor=#d4a840;" parent="1" vertex="1">
+          <mxGeometry x="570" y="1033" width="185" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="inter_sub" value="Let&#39;s Encrypt&#xa;Authority X3" style="text;html=1;fillColor=none;strokeColor=none;align=left;fontSize=11;fontColor=#ffffff;" parent="1" vertex="1">
+          <mxGeometry x="570" y="1054" width="185" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="arr_i_s" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#6a1b9a;strokeWidth=3;fillColor=#6a1b9a;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="inter_ca" target="site_cert" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="site_cert" value="" style="rounded=1;fillColor=#2d6a4f;strokeColor=#d4a840;strokeWidth=2;arcSize=10;" parent="1" vertex="1">
+          <mxGeometry x="870" y="1030" width="260" height="85" as="geometry" />
+        </mxCell>
+        <mxCell id="site_ico" value="📜" style="text;html=1;fillColor=none;strokeColor=none;align=center;fontSize=26;" parent="1" vertex="1">
+          <mxGeometry x="870" y="1033" width="55" height="42" as="geometry" />
+        </mxCell>
+        <mxCell id="site_ttl" value="CERTIFICAT FINAL" style="text;html=1;fillColor=none;strokeColor=none;align=left;fontSize=13;fontStyle=1;fontColor=#d4a840;" parent="1" vertex="1">
+          <mxGeometry x="930" y="1033" width="185" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="site_sub" value="mabanque.fr&#xa;(signé par X3)" style="text;html=1;fillColor=none;strokeColor=none;align=left;fontSize=11;fontColor=#ffffff;" parent="1" vertex="1">
+          <mxGeometry x="930" y="1054" width="185" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="store_bg" value="" style="rounded=1;fillColor=#e3f2fd;strokeColor=#1565c0;strokeWidth=2;arcSize=8;" parent="1" vertex="1">
+          <mxGeometry x="150" y="1150" width="980" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="store_ttl" value="🗄️ Trust Store — Magasin de confiance du navigateur" style="text;html=1;fillColor=none;strokeColor=none;align=left;fontSize=13;fontStyle=1;fontColor=#1565c0;" parent="1" vertex="1">
+          <mxGeometry x="165" y="1158" width="900" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="store_txt" value="Chrome, Firefox et les OS (Windows, macOS…) embarquent une liste de CA Racines de confiance pré-installées.&#xa;ISRG Root X1 est dans cette liste → le navigateur fait confiance à toute la chaîne jusqu&#39;à mabanque.fr.&#xa;🍺 Analogie : La Préfecture est reconnue par l&#39;État → sa signature est valide partout en France." style="text;html=1;fillColor=none;strokeColor=none;align=left;fontSize=12;fontColor=#1a1a2e;" parent="1" vertex="1">
+          <mxGeometry x="165" y="1185" width="950" height="85" as="geometry" />
+        </mxCell>
+        <mxCell id="hier_bg" value="" style="rounded=1;fillColor=#1a1a2e;strokeColor=#d4a840;strokeWidth=2;arcSize=8;" parent="1" vertex="1">
+          <mxGeometry x="1200" y="983" width="700" height="295" as="geometry" />
+        </mxCell>
+        <mxCell id="hier_ttl" value="🔗 La Chaîne de Confiance" style="text;html=1;fillColor=none;strokeColor=none;align=center;fontSize=14;fontStyle=1;fontColor=#d4a840;" parent="1" vertex="1">
+          <mxGeometry x="1200" y="990" width="700" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="hier_nav" value="💻 Chrome / Firefox" style="rounded=1;fillColor=#1565c0;strokeColor=none;align=center;fontSize=13;fontStyle=1;fontColor=#ffffff;arcSize=20;" parent="1" vertex="1">
+          <mxGeometry x="1310" y="1028" width="480" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="hier_a1" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#d4a840;strokeWidth=2;fillColor=#d4a840;" parent="1" source="hier_nav" target="hier_root" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="hier_root" value="🌐 CA Racine — ISRG Root X1&#xa;(Pré-installée dans le navigateur)" style="rounded=1;fillColor=#4a148c;strokeColor=#d4a840;strokeWidth=2;align=center;fontSize=12;fontColor=#ffffff;arcSize=15;" parent="1" vertex="1">
+          <mxGeometry x="1310" y="1083" width="480" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="hier_a2" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#d4a840;strokeWidth=2;fillColor=#d4a840;" parent="1" source="hier_root" target="hier_inter" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="hier_inter" value="🏛️ CA Intermédiaire — Let&#39;s Encrypt Authority X3&#xa;(Signée par la Racine)" style="rounded=1;fillColor=#6a1b9a;strokeColor=#d4a840;strokeWidth=2;align=center;fontSize=12;fontColor=#ffffff;arcSize=15;" parent="1" vertex="1">
+          <mxGeometry x="1310" y="1148" width="480" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="hier_a3" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#d4a840;strokeWidth=2;fillColor=#d4a840;" parent="1" source="hier_inter" target="hier_site" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="hier_site" value="📜 Certificat Final — mabanque.fr&#xa;(Signé par l&#39;intermédiaire)" style="rounded=1;fillColor=#2d6a4f;strokeColor=#d4a840;strokeWidth=2;align=center;fontSize=12;fontColor=#ffffff;arcSize=15;" parent="1" vertex="1">
+          <mxGeometry x="1310" y="1213" width="480" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="hier_ok" value="✅ Chaîne valide → 🔒 Cadenas vert" style="rounded=1;fillColor=#d4a840;strokeColor=none;align=center;fontSize=13;fontStyle=1;fontColor=#1a1a2e;arcSize=20;" parent="1" vertex="1">
+          <mxGeometry x="1380" y="1278" width="340" height="32" as="geometry" />
+        </mxCell>
+        <mxCell id="band4" value="ÉTAPE 4 — Le TLS Handshake moderne (TLS 1.3) 🤝" style="text;html=1;fillColor=#1565c0;strokeColor=none;align=left;fontSize=16;fontStyle=1;fontColor=#ffffff;rounded=1;arcSize=30;" parent="1" vertex="1">
+          <mxGeometry x="80" y="1330" width="1840" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="tls_bg" value="" style="rounded=1;fillColor=#f5f0e8;strokeColor=#1565c0;strokeWidth=2;arcSize=6;" parent="1" vertex="1">
+          <mxGeometry x="80" y="1380" width="1840" height="435" as="geometry" />
+        </mxCell>
+        <mxCell id="nav_col" value="" style="rounded=1;fillColor=#e3f2fd;strokeColor=#1565c0;strokeWidth=2;arcSize=10;" parent="1" vertex="1">
+          <mxGeometry x="108" y="1400" width="170" height="400" as="geometry" />
+        </mxCell>
+        <mxCell id="nav_ico2" value="💻" style="text;html=1;fillColor=none;strokeColor=none;align=center;fontSize=36;" parent="1" vertex="1">
+          <mxGeometry x="108" y="1408" width="170" height="48" as="geometry" />
+        </mxCell>
+        <mxCell id="nav_lbl2" value="NAVIGATEUR&#xa;(le videur 😐)" style="text;html=1;fillColor=none;strokeColor=none;align=center;fontSize=12;fontStyle=1;fontColor=#1565c0;" parent="1" vertex="1">
+          <mxGeometry x="108" y="1458" width="170" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="srv_col" value="" style="rounded=1;fillColor=#e8f5e9;strokeColor=#2d6a4f;strokeWidth=2;arcSize=10;" parent="1" vertex="1">
+          <mxGeometry x="1722" y="1400" width="170" height="400" as="geometry" />
+        </mxCell>
+        <mxCell id="srv_ico2" value="🌍" style="text;html=1;fillColor=none;strokeColor=none;align=center;fontSize=36;" parent="1" vertex="1">
+          <mxGeometry x="1722" y="1408" width="170" height="48" as="geometry" />
+        </mxCell>
+        <mxCell id="srv_lbl2" value="mabanque.fr&#xa;(le bar 🍺)" style="text;html=1;fillColor=none;strokeColor=none;align=center;fontSize=12;fontStyle=1;fontColor=#2d6a4f;" parent="1" vertex="1">
+          <mxGeometry x="1722" y="1458" width="170" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="srv_badge" value="📜 Certif TLS&#xa;🔐 Clé privée" style="rounded=1;fillColor=#2d6a4f;strokeColor=none;align=center;fontSize=11;fontStyle=1;fontColor=#ffffff;arcSize=15;" parent="1" vertex="1">
+          <mxGeometry x="1732" y="1502" width="150" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="sA_bg" value="" style="rounded=1;fillColor=#e3f2fd;strokeColor=#1565c0;arcSize=8;" parent="1" vertex="1">
+          <mxGeometry x="295" y="1410" width="1415" height="58" as="geometry" />
+        </mxCell>
+        <mxCell id="sA_n" value="①" style="text;html=1;fillColor=none;strokeColor=none;align=center;fontSize=16;fontStyle=1;fontColor=#1565c0;" parent="1" vertex="1">
+          <mxGeometry x="295" y="1410" width="38" height="58" as="geometry" />
+        </mxCell>
+        <mxCell id="sA_t" value="Client Hello : « Bonjour ! Je supporte TLS 1.3, voici mes algorithmes (ECDHE, AES-GCM…) »" style="text;html=1;fillColor=none;strokeColor=none;align=left;fontSize=13;fontColor=#1a1a2e;" parent="1" vertex="1">
+          <mxGeometry x="338" y="1417" width="870" height="44" as="geometry" />
+        </mxCell>
+        <mxCell id="sA_bar" value="🍺 Tu frappes à la porte du bar" style="text;html=1;fillColor=none;strokeColor=none;align=left;fontSize=11;fontStyle=2;fontColor=#6b4226;" parent="1" vertex="1">
+          <mxGeometry x="1120" y="1424" width="582" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="arrA2" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#1565c0;strokeWidth=2;fillColor=#1565c0;" parent="1" source="nav_col" target="srv_col" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="285" y="1439" />
+              <mxPoint x="1715" y="1439" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="sB_bg" value="" style="rounded=1;fillColor=#e8f5e9;strokeColor=#2d6a4f;arcSize=8;" parent="1" vertex="1">
+          <mxGeometry x="295" y="1480" width="1415" height="58" as="geometry" />
+        </mxCell>
+        <mxCell id="sB_n" value="②" style="text;html=1;fillColor=none;strokeColor=none;align=center;fontSize=16;fontStyle=1;fontColor=#2d6a4f;" parent="1" vertex="1">
+          <mxGeometry x="295" y="1480" width="38" height="58" as="geometry" />
+        </mxCell>
+        <mxCell id="sB_t" value="Server Hello + Certificat TLS + Paramètres ECDHE : « Voici mon cert signé Let&#39;s Encrypt + mes paramètres »" style="text;html=1;fillColor=none;strokeColor=none;align=left;fontSize=13;fontColor=#1a1a2e;" parent="1" vertex="1">
+          <mxGeometry x="338" y="1487" width="870" height="44" as="geometry" />
+        </mxCell>
+        <mxCell id="sB_bar" value="🍺 Le videur te montre sa carte professionnelle officielle" style="text;html=1;fillColor=none;strokeColor=none;align=left;fontSize=11;fontStyle=2;fontColor=#6b4226;" parent="1" vertex="1">
+          <mxGeometry x="1120" y="1494" width="582" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="arrB2" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#2d6a4f;strokeWidth=2;fillColor=#2d6a4f;" parent="1" source="srv_col" target="nav_col" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1715" y="1509" />
+              <mxPoint x="285" y="1509" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="sC_bg" value="" style="rounded=1;fillColor=#fdf8e1;strokeColor=#d4a840;arcSize=8;" parent="1" vertex="1">
+          <mxGeometry x="295" y="1550" width="1415" height="58" as="geometry" />
+        </mxCell>
+        <mxCell id="sC_n" value="③" style="text;html=1;fillColor=none;strokeColor=none;align=center;fontSize=16;fontStyle=1;fontColor=#b8860b;" parent="1" vertex="1">
+          <mxGeometry x="295" y="1550" width="38" height="58" as="geometry" />
+        </mxCell>
+        <mxCell id="sC_t" value="Vérification : Signature CA ✅ · Nom DNS ✅ · Date valide ✅ · Chaîne de confiance jusqu&#39;à la Racine ✅ · OCSP ✅" style="text;html=1;fillColor=none;strokeColor=none;align=left;fontSize=13;fontColor=#1a1a2e;" parent="1" vertex="1">
+          <mxGeometry x="338" y="1557" width="870" height="44" as="geometry" />
+        </mxCell>
+        <mxCell id="sC_bar" value="🍺 Le videur examine hologramme, date, photo + appelle la préf." style="text;html=1;fillColor=none;strokeColor=none;align=left;fontSize=11;fontStyle=2;fontColor=#6b4226;" parent="1" vertex="1">
+          <mxGeometry x="1120" y="1564" width="582" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="sD_bg" value="" style="rounded=1;fillColor=#f3e5f5;strokeColor=#9c27b0;strokeWidth=2;arcSize=8;" parent="1" vertex="1">
+          <mxGeometry x="295" y="1620" width="1415" height="75" as="geometry" />
+        </mxCell>
+        <mxCell id="sD_n" value="④" style="text;html=1;fillColor=none;strokeColor=none;align=center;fontSize=16;fontStyle=1;fontColor=#6a1b9a;" parent="1" vertex="1">
+          <mxGeometry x="295" y="1620" width="38" height="75" as="geometry" />
+        </mxCell>
+        <mxCell id="sD_t" value="ECDHE Key Exchange : nous échangeons des paramètres pour fabriquer&#xa;ensemble une clé de session temporaire — jamais transmise, connue uniquement de nous deux" style="text;html=1;fillColor=none;strokeColor=none;align=left;fontSize=13;fontColor=#1a1a2e;" parent="1" vertex="1">
+          <mxGeometry x="338" y="1626" width="870" height="63" as="geometry" />
+        </mxCell>
+        <mxCell id="sD_pfs" value="✨ Perfect Forward Secrecy : même si la clé privée est compromise plus tard,&#xa;les sessions passées restent indéchiffrables !" style="rounded=1;fillColor=#4a148c;strokeColor=none;align=left;fontSize=11;fontColor=#ffffff;arcSize=10;fontStyle=1;" parent="1" vertex="1">
+          <mxGeometry x="338" y="1693" width="870" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="sD_bar" value="🍺 Vous fabriquez ensemble un code secret temporaire&#xa;sans jamais vous l&#39;envoyer directement !" style="text;html=1;fillColor=none;strokeColor=none;align=left;fontSize=11;fontStyle=2;fontColor=#6b4226;" parent="1" vertex="1">
+          <mxGeometry x="1120" y="1632" width="582" height="52" as="geometry" />
+        </mxCell>
+        <mxCell id="sE_bg" value="⑤ 🎉 Connexion établie ! La clé de session chiffre toutes les données — Cadenas 🔒 dans le navigateur !" style="rounded=1;fillColor=#1a1a2e;strokeColor=#d4a840;strokeWidth=3;align=center;fontSize=14;fontStyle=1;fontColor=#d4a840;arcSize=8;" parent="1" vertex="1">
+          <mxGeometry x="295" y="1745" width="1415" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="band5" value="ÉTAPE 5 — Cycle de vie, erreurs et révocation (CRL / OCSP) ⚠️" style="text;html=1;fillColor=#c0392b;strokeColor=none;align=left;fontSize=16;fontStyle=1;fontColor=#ffffff;rounded=1;arcSize=30;" parent="1" vertex="1">
+          <mxGeometry x="80" y="1843" width="1840" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="cyc_bg" value="" style="rounded=1;fillColor=#f5f0e8;strokeColor=#c0392b;strokeWidth=2;arcSize=6;" parent="1" vertex="1">
+          <mxGeometry x="80" y="1893" width="1840" height="330" as="geometry" />
+        </mxCell>
+        <mxCell id="cy1" value="" style="ellipse;fillColor=#4a7c59;strokeColor=#2d6a4f;strokeWidth=3;" parent="1" vertex="1">
+          <mxGeometry x="108" y="1913" width="105" height="105" as="geometry" />
+        </mxCell>
+        <mxCell id="cy1t" value="1️⃣&#xa;Génère CSR&#xa;+ Clé privée" style="text;html=1;fillColor=none;strokeColor=none;align=center;fontSize=11;fontStyle=1;fontColor=#ffffff;" parent="1" vertex="1">
+          <mxGeometry x="108" y="1923" width="105" height="85" as="geometry" />
+        </mxCell>
+        <mxCell id="ca1" value="" style="shape=mxgraph.arrows2.arrow;fillColor=#4a7c59;strokeColor=none;direction=east;" parent="1" vertex="1">
+          <mxGeometry x="223" y="1953" width="55" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="cy2" value="" style="ellipse;fillColor=#d4a840;strokeColor=#b8860b;strokeWidth=3;" parent="1" vertex="1">
+          <mxGeometry x="288" y="1913" width="105" height="105" as="geometry" />
+        </mxCell>
+        <mxCell id="cy2t" value="2️⃣&#xa;CA signe&#xa;le certificat" style="text;html=1;fillColor=none;strokeColor=none;align=center;fontSize=11;fontStyle=1;fontColor=#1a1a2e;" parent="1" vertex="1">
+          <mxGeometry x="288" y="1923" width="105" height="85" as="geometry" />
+        </mxCell>
+        <mxCell id="ca2" value="" style="shape=mxgraph.arrows2.arrow;fillColor=#4a7c59;strokeColor=none;direction=east;" parent="1" vertex="1">
+          <mxGeometry x="403" y="1953" width="55" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="cy3" value="" style="ellipse;fillColor=#1565c0;strokeColor=#0d47a1;strokeWidth=3;" parent="1" vertex="1">
+          <mxGeometry x="468" y="1913" width="105" height="105" as="geometry" />
+        </mxCell>
+        <mxCell id="cy3t" value="3️⃣&#xa;Déploiement&#xa;sur serveur" style="text;html=1;fillColor=none;strokeColor=none;align=center;fontSize=11;fontStyle=1;fontColor=#ffffff;" parent="1" vertex="1">
+          <mxGeometry x="468" y="1923" width="105" height="85" as="geometry" />
+        </mxCell>
+        <mxCell id="ca3" value="" style="shape=mxgraph.arrows2.arrow;fillColor=#4a7c59;strokeColor=none;direction=east;" parent="1" vertex="1">
+          <mxGeometry x="583" y="1953" width="55" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="cy4" value="" style="ellipse;fillColor=#6a1b9a;strokeColor=#4a148c;strokeWidth=3;" parent="1" vertex="1">
+          <mxGeometry x="648" y="1913" width="105" height="105" as="geometry" />
+        </mxCell>
+        <mxCell id="cy4t" value="4️⃣&#xa;Surveillance&#xa;expiration" style="text;html=1;fillColor=none;strokeColor=none;align=center;fontSize=11;fontStyle=1;fontColor=#ffffff;" parent="1" vertex="1">
+          <mxGeometry x="648" y="1923" width="105" height="85" as="geometry" />
+        </mxCell>
+        <mxCell id="ca_renew" value="⚠️ Expire bientôt ? → Retour étape 1 !" style="edgeStyle=elbowEdgeStyle;html=1;strokeColor=#c0392b;strokeWidth=2;fillColor=#c0392b;dashed=1;fontSize=11;fontStyle=1;fontColor=#c0392b;labelBackgroundColor=#fdecea;" parent="1" source="cy4" target="cy1" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="700" y="2080" />
+              <mxPoint x="160" y="2080" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="err_ttl" value="❌ Ce qui peut mal tourner" style="text;html=1;fillColor=none;strokeColor=none;align=left;fontSize=13;fontStyle=1;fontColor=#c0392b;" parent="1" vertex="1">
+          <mxGeometry x="855" y="1900" width="400" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="e1" value="⏰ EXPIRÉ&#xa;&#xa;Comme ta carte périmée :&#xa;le navigateur bloque l&#39;accès.&#xa;→ Panne en prod à 3h du matin 😱" style="rounded=1;fillColor=#fdecea;strokeColor=#c0392b;strokeWidth=2;align=left;fontSize=12;fontColor=#c0392b;arcSize=10;" parent="1" vertex="1">
+          <mxGeometry x="855" y="1930" width="235" height="125" as="geometry" />
+        </mxCell>
+        <mxCell id="e2" value="🔓 CLÉ PRIVÉE VOLÉE&#xa;&#xa;Usurpation d&#39;identité totale.&#xa;Le hacker lit tout le trafic.&#xa;→ Révocation immédiate !" style="rounded=1;fillColor=#fdecea;strokeColor=#c0392b;strokeWidth=2;align=left;fontSize=12;fontColor=#c0392b;arcSize=10;" parent="1" vertex="1">
+          <mxGeometry x="1105" y="1930" width="235" height="125" as="geometry" />
+        </mxCell>
+        <mxCell id="e3" value="🚫 CA NON RECONNUE&#xa;&#xa;CA interne absente du Trust Store.&#xa;Le navigateur affiche ⛔ DANGER.&#xa;→ Ajouter la CA dans le store." style="rounded=1;fillColor=#fdecea;strokeColor=#c0392b;strokeWidth=2;align=left;fontSize=12;fontColor=#c0392b;arcSize=10;" parent="1" vertex="1">
+          <mxGeometry x="1355" y="1930" width="235" height="125" as="geometry" />
+        </mxCell>
+        <mxCell id="e4" value="🚨 RÉVOQUÉ (nouveau !)&#xa;&#xa;Le cert est encore valide MAIS&#xa;la CA l&#39;a annulé (clé compromise,&#xa;fraude détectée…)&#xa;→ CRL / OCSP détectent ça !" style="rounded=1;fillColor=#fdecea;strokeColor=#c0392b;strokeWidth=3;align=left;fontSize=12;fontColor=#c0392b;arcSize=10;fontStyle=1;" parent="1" vertex="1">
+          <mxGeometry x="1605" y="1930" width="285" height="145" as="geometry" />
+        </mxCell>
+        <mxCell id="rev_detail" value="🔎 CRL (Certificate Revocation List) = Liste noire publiée périodiquement par la CA&#xa;🔎 OCSP (Online Certificate Status Protocol) = Vérification en temps réel auprès de la CA&#xa;🍺 Analogie : Appeler la préfecture pour savoir si la carte est signalée volée avant de laisser entrer." style="rounded=1;fillColor=#1a1a2e;strokeColor=#c0392b;strokeWidth=2;align=left;fontSize=11;fontColor=#ff8a80;arcSize=8;" parent="1" vertex="1">
+          <mxGeometry x="855" y="2065" width="1035" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="band6" value="ÉTAPE 6 — Dans le vrai monde DevOps / Kubernetes ☁️" style="text;html=1;fillColor=#2d6a4f;strokeColor=none;align=left;fontSize=16;fontStyle=1;fontColor=#ffffff;rounded=1;arcSize=30;" parent="1" vertex="1">
+          <mxGeometry x="80" y="2243" width="1840" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="k8s_bg" value="" style="rounded=1;fillColor=#f5f0e8;strokeColor=#2d6a4f;strokeWidth=2;arcSize=6;" parent="1" vertex="1">
+          <mxGeometry x="80" y="2293" width="1840" height="280" as="geometry" />
+        </mxCell>
+        <mxCell id="k_dev" value="👨‍💻&#xa;Développeur" style="rounded=1;fillColor=#1a1a2e;strokeColor=#d4a840;strokeWidth=2;align=center;fontSize=13;fontStyle=1;fontColor=#d4a840;arcSize=10;" parent="1" vertex="1">
+          <mxGeometry x="108" y="2325" width="145" height="85" as="geometry" />
+        </mxCell>
+        <mxCell id="ka1" value="déclare&#xa;Certificate" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#d4a840;strokeWidth=2;fillColor=#d4a840;fontSize=10;fontStyle=2;fontColor=#6b4226;" parent="1" source="k_dev" target="k_cm" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="k_cm" value="🤖&#xa;cert-manager&#xa;(K8s Operator)" style="rounded=1;fillColor=#1565c0;strokeColor=#0d47a1;strokeWidth=2;align=center;fontSize=12;fontStyle=1;fontColor=#ffffff;arcSize=10;" parent="1" vertex="1">
+          <mxGeometry x="343" y="2325" width="165" height="85" as="geometry" />
+        </mxCell>
+        <mxCell id="ka2" value="demande&#xa;certificat" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#d4a840;strokeWidth=2;fillColor=#d4a840;fontSize=10;fontStyle=2;fontColor=#6b4226;" parent="1" source="k_cm" target="k_ca" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="k_ca" value="🏛️&#xa;Let&#39;s Encrypt&#xa;ou Vault PKI" style="rounded=1;fillColor=#6a1b9a;strokeColor=#4a148c;strokeWidth=2;align=center;fontSize=12;fontStyle=1;fontColor=#ffffff;arcSize=10;" parent="1" vertex="1">
+          <mxGeometry x="598" y="2325" width="165" height="85" as="geometry" />
+        </mxCell>
+        <mxCell id="ka3" value="retourne&#xa;cert signé" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#d4a840;strokeWidth=2;fillColor=#d4a840;fontSize=10;fontStyle=2;fontColor=#6b4226;" parent="1" source="k_ca" target="k_sec" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="k_sec" value="🔑&#xa;Secret TLS&#xa;(K8s Secret)" style="rounded=1;fillColor=#4a7c59;strokeColor=#2d6a4f;strokeWidth=2;align=center;fontSize=12;fontStyle=1;fontColor=#ffffff;arcSize=10;" parent="1" vertex="1">
+          <mxGeometry x="853" y="2325" width="165" height="85" as="geometry" />
+        </mxCell>
+        <mxCell id="ka4" value="monte&#xa;le cert" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#d4a840;strokeWidth=2;fillColor=#d4a840;fontSize=10;fontStyle=2;fontColor=#6b4226;" parent="1" source="k_sec" target="k_ing" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="k_ing" value="🌐&#xa;Kong / Ingress&#xa;/ Gateway API" style="rounded=1;fillColor=#c0392b;strokeColor=#922b21;strokeWidth=2;align=center;fontSize=12;fontStyle=1;fontColor=#ffffff;arcSize=10;" parent="1" vertex="1">
+          <mxGeometry x="1108" y="2325" width="165" height="85" as="geometry" />
+        </mxCell>
+        <mxCell id="ka5" value="TLS terminé,&#xa;trafic HTTP" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#d4a840;strokeWidth=2;fillColor=#d4a840;fontSize=10;fontStyle=2;fontColor=#6b4226;" parent="1" source="k_ing" target="k_app" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="k_app" value="⚙️&#xa;Application&#xa;(Pod Spring Boot)" style="rounded=1;fillColor=#2d6a4f;strokeColor=#1a3d2b;strokeWidth=2;align=center;fontSize=12;fontStyle=1;fontColor=#ffffff;arcSize=10;" parent="1" vertex="1">
+          <mxGeometry x="1363" y="2325" width="165" height="85" as="geometry" />
+        </mxCell>
+        <mxCell id="vault_enc" value="" style="rounded=1;fillColor=#1a1a2e;strokeColor=#d4a840;strokeWidth=2;arcSize=8;" parent="1" vertex="1">
+          <mxGeometry x="1600" y="2305" width="295" height="240" as="geometry" />
+        </mxCell>
+        <mxCell id="vault_ttl" value="🔐 Vault PKI — Pattern Entreprise" style="text;html=1;fillColor=none;strokeColor=none;align=center;fontSize=12;fontStyle=1;fontColor=#d4a840;" parent="1" vertex="1">
+          <mxGeometry x="1600" y="2312" width="295" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="vault_txt" value="• CA interne d&#39;entreprise&#xa;• Init container récupère le cert&#xa;  au démarrage du Pod&#xa;• CronJob surveille l&#39;expiration&#xa;• Renouvellement automatique&#xa;• Clé stockée en mémoire (emptyDir)&#xa;• Jamais dans etcd !&#xa;• mTLS : client + serveur s&#39;authentifient" style="text;html=1;fillColor=none;strokeColor=none;align=left;fontSize=11;fontColor=#ffffff;" parent="1" vertex="1">
+          <mxGeometry x="1615" y="2340" width="268" height="195" as="geometry" />
+        </mxCell>
+        <mxCell id="k_msg" value="🎯 cert-manager surveille et renouvelle automatiquement avant expiration → Zéro intervention manuelle → Zéro panne !" style="rounded=1;fillColor=#2d6a4f;strokeColor=none;align=center;fontSize=13;fontStyle=1;fontColor=#ffffff;arcSize=8;" parent="1" vertex="1">
+          <mxGeometry x="108" y="2437" width="1415" height="42" as="geometry" />
+        </mxCell>
+        <mxCell id="footer" value="📖 RETENIR  |  Certificat = identité du serveur (pas le chiffrement !)  ·  CA Racine → Intermédiaire → Site (chaîne de confiance)  ·  TLS 1.3 = ECDHE + Perfect Forward Secrecy  ·  Révocation = CRL / OCSP  ·  Clé privée = secret absolu" style="rounded=1;fillColor=#1a1a2e;strokeColor=none;align=center;fontSize=13;fontStyle=1;fontColor=#ffffff;arcSize=8;" parent="1" vertex="1">
+          <mxGeometry x="80" y="2590" width="1840" height="45" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
