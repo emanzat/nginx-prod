@@ -1,0 +1,219 @@
+<mxfile host="Electron" agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/29.0.3 Chrome/140.0.7339.249 Electron/38.7.0 Safari/537.36" version="29.0.3">
+  <diagram name="Vault-EventStreams-BNP-v3" id="vault-es-bnp-v3">
+    <mxGraphModel dx="3283" dy="944" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1800" pageHeight="1750" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" value="Vault Dynamic Secrets → IBM Cloud IAM → Event Streams (Kafka) - v3" style="text;html=1;fontSize=22;fontStyle=1;fontColor=#00543C;align=center;verticalAlign=middle;" parent="1" vertex="1">
+          <mxGeometry y="10" width="1800" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="subtitle" value="2 API IBM Cloud distinctes (Identity + API Keys) - IAM Authorization Policy (pas d&#39;ACL Kafka native) - rotation detaillee" style="text;html=1;fontSize=12.5;fontColor=#58595B;align=center;verticalAlign=middle;" parent="1" vertex="1">
+          <mxGeometry y="42" width="1800" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="legendFlowText" value="— Flux Producer (vert)     — Flux Consumer (bleu)     ••• Appels IAM successifs (orange)     ••• Rotation (gris)" style="text;html=1;fontSize=11;align=center;verticalAlign=middle;fontColor=#2C2C2C;" parent="1" vertex="1">
+          <mxGeometry x="1150" y="70" width="600" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="vaultBox" value="" style="rounded=1;arcSize=6;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#00915A;strokeWidth=2;" parent="1" vertex="1">
+          <mxGeometry x="40" y="115" width="370" height="565" as="geometry" />
+        </mxCell>
+        <mxCell id="vaultHeader" value="HashiCorp Vault" style="rounded=1;arcSize=15;whiteSpace=wrap;html=1;fillColor=#00543C;strokeColor=none;fontColor=#FFFFFF;fontStyle=1;fontSize=16;align=center;verticalAlign=middle;" parent="1" vertex="1">
+          <mxGeometry x="40" y="115" width="370" height="42" as="geometry" />
+        </mxCell>
+        <mxCell id="k8sAuth" value="Auth Method: kubernetes&lt;br&gt;&lt;br&gt;role=producer-app → bound_sa: producer-sa&lt;br&gt;role=consumer-app → bound_sa: consumer-sa&lt;br&gt;TokenReview API (validation SA JWT)&lt;br&gt;&lt;i&gt;policies = [producer-policy] / [consumer-policy]&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F2F7F4;strokeColor=#9AA0A6;fontSize=11.5;align=left;verticalAlign=top;spacingLeft=10;spacingTop=8;fontColor=#2C2C2C;" parent="1" vertex="1">
+          <mxGeometry x="65" y="170" width="315" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="policies" value="Policy: producer-policy.hcl (READ-ONLY)&lt;br&gt;path &quot;ibmcloud/creds/producer-role&quot; {&lt;br&gt;  capabilities = [&quot;read&quot;]&lt;br&gt;}&lt;br&gt;&lt;br&gt;Policy: consumer-policy.hcl (READ-ONLY)&lt;br&gt;path &quot;ibmcloud/creds/consumer-role&quot; {&lt;br&gt;  capabilities = [&quot;read&quot;]&lt;br&gt;}&lt;br&gt;&lt;br&gt;&lt;i&gt;Isolation stricte: aucune policy ne peut lire le role de l&#39;autre&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F2F7F4;strokeColor=#9AA0A6;fontSize=10.6;fontFamily=Courier New;align=left;verticalAlign=top;spacingLeft=10;spacingTop=8;fontColor=#2C2C2C;" parent="1" vertex="1">
+          <mxGeometry x="65" y="280" width="315" height="185" as="geometry" />
+        </mxCell>
+        <mxCell id="secretsEngine" value="Secrets Engine: ibmcloud/ (plugin)&lt;br&gt;Config root: admin API key avec droits IAM&lt;br&gt;&lt;br&gt;&lt;b&gt;IMPORTANT: le plugin orchestre 3 appels&lt;/b&gt;&lt;br&gt;&lt;b&gt;a des API IBM Cloud DISTINCTES&lt;/b&gt; (voir bloc IAM →)&lt;br&gt;&lt;br&gt;&lt;b&gt;Role: producer-role&lt;/b&gt; → Writer scope Event Streams&lt;br&gt;&lt;b&gt;Role: consumer-role&lt;/b&gt; → Reader scope Event Streams&lt;br&gt;&lt;br&gt;ttl=1h / max_ttl=4h (lease)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F2F7F4;strokeColor=#9AA0A6;fontSize=11;align=left;verticalAlign=top;spacingLeft=10;spacingTop=8;fontColor=#2C2C2C;" parent="1" vertex="1">
+          <mxGeometry x="65" y="480" width="315" height="180" as="geometry" />
+        </mxCell>
+        <mxCell id="iamBox" value="" style="rounded=1;arcSize=6;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#58595B;strokeWidth=2;" parent="1" vertex="1">
+          <mxGeometry x="673" y="115" width="380" height="565" as="geometry" />
+        </mxCell>
+        <mxCell id="iamHeader" value="IBM Cloud IAM - 3 API distinctes" style="rounded=1;arcSize=15;whiteSpace=wrap;html=1;fillColor=#58595B;strokeColor=none;fontColor=#FFFFFF;fontStyle=1;fontSize=16;align=center;verticalAlign=middle;" parent="1" vertex="1">
+          <mxGeometry x="673" y="115" width="380" height="42" as="geometry" />
+        </mxCell>
+        <mxCell id="idApiBox" value="1️⃣ IAM Identity API&lt;br&gt;POST /v1/serviceids&lt;br&gt;&lt;br&gt;Cree une ressource Service ID (identite):&lt;br&gt;svc-vault-producer-&amp;lt;uuid&amp;gt;&lt;br&gt;svc-vault-consumer-&amp;lt;uuid&amp;gt;&lt;br&gt;&lt;i&gt;Ne cree PAS encore de credential utilisable&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EAF3EF;strokeColor=#00915A;strokeWidth=1.5;fontSize=11;align=left;verticalAlign=top;spacingLeft=10;spacingTop=8;fontColor=#2C2C2C;" parent="1" vertex="1">
+          <mxGeometry x="698" y="170" width="265" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="policyApiBox" value="2️⃣ IAM Policy API&lt;br&gt;POST /v1/policies&lt;br&gt;&lt;br&gt;Cree une IAM Authorization Policy qui lie&lt;br&gt;le SID a un role, scopee sur l&#39;instance ES:&lt;br&gt;Producer SID → role &lt;b&gt;Writer&lt;/b&gt;&lt;br&gt;Consumer SID → role &lt;b&gt;Reader&lt;/b&gt;&lt;br&gt;&lt;i&gt;Remplace les ACL Kafka classiques - Event&lt;br&gt;Streams manage n&#39;a pas d&#39;ACL natives, tout&lt;br&gt;passe par IAM&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EAF3EF;strokeColor=#00915A;strokeWidth=1.5;fontSize=11;align=left;verticalAlign=top;spacingLeft=10;spacingTop=8;fontColor=#2C2C2C;" parent="1" vertex="1">
+          <mxGeometry x="698" y="305" width="275" height="170" as="geometry" />
+        </mxCell>
+        <mxCell id="apikeyApiBox" value="3️⃣ IAM API Keys API&lt;br&gt;POST /v1/apikeys&lt;br&gt;&lt;br&gt;Cree une API Key attachee au SID&lt;br&gt;(reference son iam_id)&lt;br&gt;&lt;br&gt;&lt;b&gt;C&#39;est CETTE cle - et uniquement elle -&lt;/b&gt;&lt;br&gt;&lt;b&gt;qui est retournee au pod et utilisee pour&lt;/b&gt;&lt;br&gt;&lt;b&gt;l&#39;auth SASL. Le SID lui-meme reste cote IAM.&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EAF3EF;strokeColor=#B01B1B;strokeWidth=1.5;fontSize=11;align=left;verticalAlign=top;spacingLeft=10;spacingTop=8;fontColor=#B01B1B;" parent="1" vertex="1">
+          <mxGeometry x="698" y="490" width="275" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="esBox" value="" style="rounded=1;arcSize=6;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#00915A;strokeWidth=2;" parent="1" vertex="1">
+          <mxGeometry x="1090" y="115" width="620" height="340" as="geometry" />
+        </mxCell>
+        <mxCell id="esHeader" value="IBM Event Streams (Kafka manage)" style="rounded=1;arcSize=15;whiteSpace=wrap;html=1;fillColor=#00915A;strokeColor=none;fontColor=#FFFFFF;fontStyle=1;fontSize=16;align=center;verticalAlign=middle;" parent="1" vertex="1">
+          <mxGeometry x="1090" y="115" width="620" height="42" as="geometry" />
+        </mxCell>
+        <mxCell id="esAuth" value="Auth SASL_SSL / PLAIN (le SEUL secret transmis au client Kafka)&lt;br&gt;username = &quot;token&quot;&lt;br&gt;password = &amp;lt;API Key dynamique&amp;gt;  ← PAS le SID&lt;br&gt;&lt;i&gt;bootstrap.servers = broker-*.kafka.svc...:9093&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F2F7F4;strokeColor=#9AA0A6;fontSize=11.5;align=left;verticalAlign=top;spacingLeft=10;spacingTop=8;fontColor=#2C2C2C;" parent="1" vertex="1">
+          <mxGeometry x="1115" y="175" width="570" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="topicBox" value="Topic&lt;br&gt;&lt;br&gt;orders.events&lt;br&gt;partitions: 6 / replication: 3&lt;br&gt;&lt;br&gt;&lt;b&gt;Pas d&#39;ACL Kafka native.&lt;/b&gt;&lt;br&gt;Acces controle en amont par&lt;br&gt;l&#39;IAM Authorization Policy&lt;br&gt;(cf. bloc IAM, etape 2)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EAF3EF;strokeColor=#00915A;fontSize=11.3;align=left;verticalAlign=top;spacingLeft=10;spacingTop=8;fontColor=#2C2C2C;" parent="1" vertex="1">
+          <mxGeometry x="1115" y="275" width="270" height="160" as="geometry" />
+        </mxCell>
+        <mxCell id="cgBox" value="Consumer Group&lt;br&gt;&lt;br&gt;cg-orders-processor&lt;br&gt;&lt;br&gt;acces restreint via la&lt;br&gt;policy IAM du consumer SID&lt;br&gt;(role Reader)&lt;br&gt;offset commit auto" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EAF0F7;strokeColor=#2E5FA3;fontSize=11.3;align=left;verticalAlign=top;spacingLeft=10;spacingTop=8;fontColor=#2C2C2C;" parent="1" vertex="1">
+          <mxGeometry x="1405" y="275" width="270" height="160" as="geometry" />
+        </mxCell>
+        <mxCell id="producerBox" value="" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#00915A;strokeWidth=2;" parent="1" vertex="1">
+          <mxGeometry x="40" y="820" width="460" height="220" as="geometry" />
+        </mxCell>
+        <mxCell id="producerHeader" value="Pod Producer (OpenShift/K8s)" style="rounded=1;arcSize=15;whiteSpace=wrap;html=1;fillColor=#00543C;strokeColor=none;fontColor=#FFFFFF;fontStyle=1;fontSize=15;align=center;verticalAlign=middle;" parent="1" vertex="1">
+          <mxGeometry x="40" y="820" width="460" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="producerText" value="SA: producer-sa&lt;br&gt;&lt;b&gt;initContainer vault-init&lt;/b&gt;&amp;nbsp;:&lt;br&gt;&amp;nbsp;&amp;nbsp;1) login K8s aupres de Vault&lt;br&gt;&amp;nbsp;&amp;nbsp;2) vault read ibmcloud/creds/producer-role&lt;br&gt;&amp;nbsp;&amp;nbsp;3) ecrit API Key dans emptyDir (tmpfs) partage&lt;br&gt;&amp;nbsp;&amp;nbsp;4) termine (exit 0) avant demarrage conteneur appli&lt;br&gt;&lt;br&gt;&lt;b&gt;kafka-producer.send(topic, msg)&lt;/b&gt;" style="text;html=1;fontSize=11.2;align=left;verticalAlign=top;spacingLeft=15;spacingTop=8;fontColor=#2C2C2C;" parent="1" vertex="1">
+          <mxGeometry x="40" y="865" width="460" height="170" as="geometry" />
+        </mxCell>
+        <mxCell id="consumerBox" value="" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#2E5FA3;strokeWidth=2;" parent="1" vertex="1">
+          <mxGeometry x="1320" y="820" width="430" height="220" as="geometry" />
+        </mxCell>
+        <mxCell id="consumerHeader" value="Pod Consumer" style="rounded=1;arcSize=15;whiteSpace=wrap;html=1;fillColor=#1E3F6E;strokeColor=none;fontColor=#FFFFFF;fontStyle=1;fontSize=15;align=center;verticalAlign=middle;" parent="1" vertex="1">
+          <mxGeometry x="1320" y="820" width="430" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="consumerText" value="SA: consumer-sa&lt;br&gt;&lt;b&gt;initContainer vault-init&lt;/b&gt;:&lt;br&gt;  1) login K8s aupres de Vault&lt;br&gt;  2) vault read ibmcloud/creds/consumer-role&lt;br&gt;  3) ecrit API Key dans emptyDir partage&lt;br&gt;  4) termine avant demarrage conteneur appli&lt;br&gt;&lt;br&gt;&lt;b&gt;poll(cg-orders-processor)&lt;/b&gt;" style="text;html=1;fontSize=11.2;align=left;verticalAlign=top;spacingLeft=15;spacingTop=8;fontColor=#2C2C2C;" parent="1" vertex="1">
+          <mxGeometry x="1320" y="865" width="430" height="170" as="geometry" />
+        </mxCell>
+        <mxCell id="rotBox" value="" style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;fillColor=#FAFAFA;strokeColor=#9AA0A6;strokeWidth=1.5;" parent="1" vertex="1">
+          <mxGeometry x="40" y="1080" width="1710" height="270" as="geometry" />
+        </mxCell>
+        <mxCell id="rotTitle" value="Rotation detaillee (point sensible) - ne PAS supposer que le client Kafka recharge les credentials automatiquement" style="text;html=1;fontSize=14;fontStyle=1;fontColor=#7A5C00;align=left;verticalAlign=middle;spacingLeft=15;" parent="1" vertex="1">
+          <mxGeometry x="40" y="1085" width="1100" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="r1" value="TTL approche&lt;br&gt;(lease Vault proche&lt;br&gt;de l&#39;expiration)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#58595B;fontSize=11;align=center;verticalAlign=middle;" parent="1" vertex="1">
+          <mxGeometry x="70" y="1171" width="180" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="r2" value="Vault: sys/leases/renew&lt;br&gt;(Renew Lease)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#58595B;fontSize=11;align=center;verticalAlign=middle;" parent="1" vertex="1">
+          <mxGeometry x="300" y="1171" width="180" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="r3" value="API Key encore&lt;br&gt;renouvelable ?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FFF6E5;strokeColor=#B08D00;fontSize=11;align=center;verticalAlign=middle;" parent="1" vertex="1">
+          <mxGeometry x="530" y="1161" width="190" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="r3a" value="OUI&lt;br&gt;Renouvellement:&lt;br&gt;meme API Key,&lt;br&gt;TTL prolonge" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EAF3EF;strokeColor=#00915A;fontSize=11;align=center;verticalAlign=middle;" parent="1" vertex="1">
+          <mxGeometry x="770" y="1121" width="190" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="r3b" value="NON&lt;br&gt;Nouvelle API Key creee&lt;br&gt;+ ancien SID/cle&lt;br&gt;programme pour revocation" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FDEDED;strokeColor=#B01B1B;fontSize=11;align=center;verticalAlign=middle;" parent="1" vertex="1">
+          <mxGeometry x="770" y="1221" width="190" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="r4" value="Callback Kafka:&lt;br&gt;client recharge credentials&lt;br&gt;(SASL callback custom)&lt;br&gt;OU rollout restart controle" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#58595B;fontSize=11;align=center;verticalAlign=middle;" parent="1" vertex="1">
+          <mxGeometry x="1030" y="1171" width="220" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="r5" value="Ancienne API Key&lt;br&gt;supprimee cote IAM&lt;br&gt;(revoquee, definitivement&lt;br&gt;invalide)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#58595B;fontSize=11;align=center;verticalAlign=middle;" parent="1" vertex="1">
+          <mxGeometry x="1320" y="1171" width="200" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="rNote" value="⚠ Sans mecanisme de reload cote client, le Kafka client continue d&#39;utiliser l&#39;ancienne cle en memoire&#xa;jusqu&#39;a echec d&#39;authentification (SaslAuthenticationException) - d&#39;ou la necessite du callback ou du restart controle AVANT suppression." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF6E5;strokeColor=#B08D00;fontSize=10.5;align=left;verticalAlign=middle;spacingLeft=12;fontColor=#7A5C00;" parent="1" vertex="1">
+          <mxGeometry x="1550" y="1171" width="180" height="180" as="geometry" />
+        </mxCell>
+        <mxCell id="re1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#58595B;strokeWidth=2;endArrow=block;" parent="1" source="r1" target="r2" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="re2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#58595B;strokeWidth=2;endArrow=block;" parent="1" source="r2" target="r3" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="re3a" value="oui" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#00915A;strokeWidth=2;endArrow=block;fontSize=10;fontColor=#00915A;" parent="1" source="r3" target="r3a" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="re3b" value="non" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#B01B1B;strokeWidth=2;endArrow=block;fontSize=10;fontColor=#B01B1B;" parent="1" source="r3" target="r3b" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="re4a" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#58595B;strokeWidth=2;endArrow=block;" parent="1" source="r3a" target="r4" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="re4b" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#58595B;strokeWidth=2;endArrow=block;" parent="1" source="r3b" target="r4" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="re5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#58595B;strokeWidth=2;endArrow=block;" parent="1" source="r4" target="r5" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e1" value="1. Auth K8s (SA token producer)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#00915A;strokeWidth=2.5;endArrow=block;fontSize=11;fontColor=#00915A;labelBackgroundColor=#FFFFFF;curved=0;exitX=0;exitY=0.25;exitDx=0;exitDy=0;" parent="1" source="producerText" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="100" y="820" as="sourcePoint" />
+            <mxPoint x="68" y="220" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="-100" y="908" />
+              <mxPoint x="-100" y="220" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e4" value="4. Pod ← Vault : API Key injectee via initContainer" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#00915A;strokeWidth=2.5;dashed=1;endArrow=block;fontSize=11;fontColor=#00915A;labelBackgroundColor=#FFFFFF;exitX=0.422;exitY=1.004;exitDx=0;exitDy=0;entryX=0.35;entryY=0;entryDx=0;entryDy=0;exitPerimeter=0;" parent="1" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="153.14000000000033" y="682.2600000000002" as="sourcePoint" />
+            <mxPoint x="157.99999999999955" y="820" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="158" y="682" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e5" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#00915A;strokeWidth=3;endArrow=block;fontSize=11.5;fontColor=#00915A;labelBackgroundColor=#FFFFFF;exitX=1;exitY=0.15;exitDx=0;exitDy=0;" parent="1" source="producerBox" target="topicBox" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="500" y="860" />
+              <mxPoint x="1210" y="860" />
+            </Array>
+            <mxPoint x="1210" y="480" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="1WvtMMla1NQrwZRKOJ87-1" value="&lt;span style=&quot;color: rgb(0, 145, 90); font-size: 12px;&quot;&gt;5. Pod → Kafka : connexion SASL_SSL (API Key), produce&lt;/span&gt;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="e5">
+          <mxGeometry x="-0.3658" y="1" relative="1" as="geometry">
+            <mxPoint x="1" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e6" value="6. Auth K8s (SA token consumer)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#2E5FA3;strokeWidth=2.5;endArrow=block;fontSize=11;fontColor=#2E5FA3;labelBackgroundColor=#FFFFFF;exitX=0.85;exitY=0;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;curved=0;" parent="1" source="consumerBox" target="k8sAuth" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1686" y="740" />
+              <mxPoint x="434" y="740" />
+              <mxPoint x="434" y="220" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e6b" value="9. Pod ← Vault : API Key injectee via initContainer" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#2E5FA3;strokeWidth=2.5;dashed=1;endArrow=block;fontSize=11;fontColor=#2E5FA3;labelBackgroundColor=#FFFFFF;exitX=0.7;exitY=1;exitDx=0;exitDy=0;entryX=0.7;entryY=0;entryDx=0;entryDy=0;" parent="1" source="vaultBox" target="consumerBox" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="380" y="795" />
+              <mxPoint x="1535" y="795" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e7" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#2E5FA3;strokeWidth=3;endArrow=block;fontSize=11.5;fontColor=#2E5FA3;labelBackgroundColor=#FFFFFF;entryX=0.8;entryY=1;entryDx=0;entryDy=0;curved=0;exitX=0.936;exitY=-0.011;exitDx=0;exitDy=0;exitPerimeter=0;" parent="1" source="consumerHeader" target="esBox" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1720" y="810" as="sourcePoint" />
+            <Array as="points">
+              <mxPoint x="1720" y="820" />
+              <mxPoint x="1720" y="638" />
+              <mxPoint x="1586" y="638" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="1WvtMMla1NQrwZRKOJ87-2" value="&lt;span style=&quot;color: rgb(46, 95, 163); font-size: 12px;&quot;&gt;10. Pod → Kafka : connexion SASL_SSL (API Key), consume&lt;/span&gt;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="e7">
+          <mxGeometry x="0.5199" y="-2" relative="1" as="geometry">
+            <mxPoint y="1" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e2a" value="2a. create Service ID" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#B08D00;strokeWidth=2.5;dashed=1;endArrow=block;fontSize=10.5;fontColor=#B08D00;labelBackgroundColor=#FFFFFF;exitX=1;exitY=0.25;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;curved=0;" parent="1" source="secretsEngine" target="idApiBox" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2b" value="2b. assign IAM policy" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#B08D00;strokeWidth=2.5;endArrow=block;fontSize=10.5;fontColor=#B08D00;labelBackgroundColor=#FFFFFF;" parent="1" source="idApiBox" target="policyApiBox" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2c" value="2c. create API Key" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#B08D00;strokeWidth=2.5;endArrow=block;fontSize=10.5;fontColor=#B08D00;labelBackgroundColor=#FFFFFF;" parent="1" source="policyApiBox" target="apikeyApiBox" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3" value="3. retour API Key uniquement (le SID reste cote IAM)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#B08D00;strokeWidth=2.5;dashed=1;endArrow=block;fontSize=10.5;fontColor=#B08D00;labelBackgroundColor=#FFFFFF;exitX=0;exitY=0.6;exitDx=0;exitDy=0;entryX=1;entryY=0.75;entryDx=0;entryDy=0;curved=0;" parent="1" source="apikeyApiBox" target="secretsEngine" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="legendBox" value="" style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#9AA0A6;strokeWidth=1.5;" parent="1" vertex="1">
+          <mxGeometry x="40" y="1370" width="1710" height="330" as="geometry" />
+        </mxCell>
+        <mxCell id="legendTitle" value="Deroule du flux (numerote par etape)" style="text;html=1;fontSize=15;fontStyle=1;fontColor=#00543C;align=left;verticalAlign=middle;spacingLeft=15;" parent="1" vertex="1">
+          <mxGeometry x="40" y="1375" width="600" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="legendText" value="&lt;b&gt;Flux Producer (vert):&lt;/b&gt;&#xa;1. Pod Producer presente son token SA K8s a Vault via l&#39;initContainer vault-init → validation TokenReview&#xa;2a. Vault appelle &lt;b&gt;IAM Identity API&lt;/b&gt; → cree un Service ID producer (ressource d&#39;identite, sans credential utilisable)&#xa;2b. Vault appelle &lt;b&gt;IAM Policy API&lt;/b&gt; → cree une IAM Authorization Policy liant ce SID au role Writer, scopee sur l&#39;instance Event Streams&#xa;2c. Vault appelle &lt;b&gt;IAM API Keys API&lt;/b&gt; → cree une API Key attachee au SID (3 ressources IAM distinctes, 3 appels distincts)&#xa;3. Vault ne retourne au pod QUE l&#39;API Key (jamais le SID) - ecrite dans un emptyDir/tmpfs par l&#39;initContainer, jamais sur disque persistant&#xa;5. Le client Kafka se connecte en SASL_SSL/PLAIN (username=token, password=API Key) pour produire sur orders.events - l&#39;acces est arbitre par la policy IAM, pas par une ACL Kafka&#xa;&#xa;&lt;b&gt;Flux Consumer (bleu) - meme sequence en 3 appels IAM, role Reader, isolation stricte via policies Vault separees.&lt;/b&gt;&#xa;&#xa;&lt;b&gt;Fin de bail:&lt;/b&gt; a expiration du TTL (ou revoke), Vault supprime l&#39;API Key ET le Service ID via les memes API IAM - aucun credential statique ne persiste.&#xa;&lt;b&gt;Rotation (voir flowchart ci-dessus):&lt;/b&gt; le renew de bail Vault ne suffit pas seul - sans callback applicatif ou restart controle, le client Kafka garde l&#39;ancienne cle en memoire jusqu&#39;a echec d&#39;authentification." style="text;html=1;fontSize=11.3;align=left;verticalAlign=top;spacingLeft=15;spacingTop=5;fontColor=#2C2C2C;" parent="1" vertex="1">
+          <mxGeometry x="40" y="1405" width="1710" height="290" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
