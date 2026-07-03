@@ -163,4 +163,34 @@ Révocation ou expiration
 Suppression automatique de :
    • l'API Key
    • le Service ID
+
+
+startupProbe:
+  httpGet:
+    path: /healthz
+    port: 8443
+    scheme: HTTPS
+  initialDelaySeconds: 10
+  periodSeconds: 10
+  failureThreshold: 30      # 30 × 10s = 300s de budget (> 210s)
+  timeoutSeconds: 3
+
+livenessProbe:
+  httpGet:
+    path: /healthz
+    port: 8443
+    scheme: HTTPS
+  periodSeconds: 10
+  timeoutSeconds: 3
+  failureThreshold: 3       # plus besoin d'un gros initialDelay : le startupProbe gère le boot
+
+readinessProbe:
+  httpGet:
+    path: /healthz
+    port: 8080
+    scheme: HTTP
+  periodSeconds: 5
+  timeoutSeconds: 3
+  failureThreshold: 3
+
 ```
