@@ -1,3 +1,42 @@
+Salut,
+
+Pas de page Confluence dédiée à ce sujet à ma connaissance (je n'en ai pas vu passer). Voici ce que je peux te partager :
+
+1) Transformation des annotations nginx → HAProxy
+Il n'y a pas de mapping automatique 1:1. Les annotations nginx.ingress.kubernetes.io/* doivent être retranscrites manuellement en annotations Route OpenShift (haproxy.router.openshift.io/* et router.openshift.io/*). Pas de règle de correspondance officielle partagée côté Confluence pour l'instant — à formaliser si l'équipage en a besoin.
+
+2) Session affinity (cookie / sticky sessions)
+Le cookie de persistance ne peut PAS fonctionner en passthrough : dans ce mode le routeur ne voit que le SNI/hostname, pas la couche HTTP, donc il ne peut ni lire ni injecter de cookie. Pour reproduire le comportement de l'annotation nginx cookie, il faut passer en reencrypt (ou edge) et utiliser :
+
+    haproxy.router.openshift.io/disable_cookies: "false"
+    router.openshift.io/cookie_name: nts-cookie
+
+Donc oui : dès qu'il y a du cookie / de l'affinity, le passthrough est à déconseiller à l'équipage → reencrypt obligatoire.
+
+3) Multipath
+Même logique que ci-dessus : le multipath n'est pas géré en passthrough (le routeur ne voit pas le path). Deux options :
+  - éclater en plusieurs Routes (une par path), en edge/reencrypt ;
+  - ou garder le routage de path au niveau du sidecar nginx : une seule Route reencrypt vers le sidecar, et nginx dispatche en interne (config nginx).
+
+4) Regex dans les paths — limitation
+Les Routes OpenShift ne gèrent pas les regex / wildcards dans les paths : le matching se fait en préfixe uniquement. Un pattern type api/* n'est pas supportable directement sur la Route → à porter sur le sidecar nginx.
+
+Quelques correspondances complémentaires utiles pour l'équipage :
+  - Rewrite : nginx .../rewrite-target → haproxy.router.openshift.io/rewrite-target
+  - Timeouts : proxy-read-timeout / proxy-send-timeout → haproxy.router.openshift.io/timeout
+  - Algo de load balancing : haproxy.router.openshift.io/balance (roundrobin, leastconn, source)
+  - Allowlist IP : nginx .../whitelist-source-range → haproxy.router.openshift.io/ip_allowlist (ex-ip_whitelist)
+  - Rate limiting : haproxy.router.openshift.io/rate-limit-connections
+  - Taille de body : pas d'équivalent simple par-Route (géré au niveau IngressController/HAProxy global) → à traiter sur le sidecar si besoin
+
+À noter aussi : le reencrypt suppose de fournir le destinationCACertificate dans la Route (CA du sidecar).
+
+En résumé, le pattern qu'on pousse reste : une Route reencrypt vers le sidecar nginx, et on garde toute la logique fine (multipath, regex, rewrite complexe, headers) dans la conf nginx du sidecar. Ça limite la surface d'annotations sur la Route et ça reste cohérent avec l'archi cible.
+
+Je peux monter une petite page Confluence de correspondance nginx → Route si ça vous rend service côté équipages.
+
+
+
 # Exemple complet : Vault Dynamic Secrets → IBM Cloud IAM → IBM Event Streams
 
 ## 1. Authentification Kubernetes → Obtention du token Vault
