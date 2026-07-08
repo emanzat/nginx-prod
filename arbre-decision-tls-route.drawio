@@ -1,0 +1,57 @@
+<mxfile host="Electron" agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/29.0.3 Chrome/140.0.7339.249 Electron/38.7.0 Safari/537.36" version="29.0.3">
+  <diagram name="Terminaison TLS Route OpenShift" id="tls-route-decision">
+    <mxGraphModel dx="1426" dy="785" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1240" pageHeight="880" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" value="&lt;b&gt;Terminaison TLS sur Route OpenShift — arbre de décision&lt;/b&gt;" style="text;html=1;align=left;verticalAlign=middle;fontSize=20;fontColor=#1e293b;" parent="1" vertex="1">
+          <mxGeometry x="40" y="18" width="820" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="subtitle" value="Depuis un Ingress nginx + annotations : chiffrement pod-to-pod obligatoire → edge exclu" style="text;html=1;align=left;verticalAlign=middle;fontSize=13;fontColor=#64748b;" parent="1" vertex="1">
+          <mxGeometry x="40" y="48" width="860" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="n_start" value="&lt;b&gt;Ingress nginx + annotations&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;shadow=1;fontSize=14;fillColor=#eef2ff;strokeColor=#6366f1;strokeWidth=2;fontColor=#312e81;" parent="1" vertex="1">
+          <mxGeometry x="470" y="90" width="300" height="54" as="geometry" />
+        </mxCell>
+        <mxCell id="n_q0" value="&lt;b&gt;ssl-passthrough = true ?&lt;/b&gt;&lt;br&gt;&lt;i&gt;décision&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;arcSize=18;shadow=1;fontSize=13;fillColor=#e0f2fe;strokeColor=#0284c7;strokeWidth=2;fontColor=#075985;" parent="1" vertex="1">
+          <mxGeometry x="470" y="176" width="300" height="64" as="geometry" />
+        </mxCell>
+        <mxCell id="n_info" value="&lt;b&gt;Router termine le TLS → L7 dispo&lt;/b&gt;&lt;br&gt;Marqueurs L7 : affinity/cookie, multipath, rewrite/regex, headers, snippet, ssl-redirect&lt;br&gt;&lt;b&gt;→ passthrough exclu&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;arcSize=14;shadow=1;fontSize=12;fillColor=#ecfeff;strokeColor=#06b6d4;strokeWidth=2;fontColor=#155e75;" parent="1" vertex="1">
+          <mxGeometry x="40" y="288" width="350" height="104" as="geometry" />
+        </mxCell>
+        <mxCell id="s8_1X0MwQ2HWdCFS6Dsb-6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#94A3B8;strokeWidth=2;" edge="1" parent="1" source="n_q1" target="n_pt">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="s8_1X0MwQ2HWdCFS6Dsb-7" value="&lt;b&gt;&lt;font style=&quot;color: rgb(109, 40, 217);&quot;&gt;Non&lt;/font&gt;&lt;/b&gt;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="s8_1X0MwQ2HWdCFS6Dsb-6">
+          <mxGeometry x="-0.248" y="1" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="n_q1" value="&lt;b&gt;Besoin L7 ?&lt;/b&gt;&lt;br&gt;le router doit voir le HTTP" style="rounded=1;whiteSpace=wrap;html=1;arcSize=18;shadow=1;fontSize=13;fillColor=#e0f2fe;strokeColor=#0284c7;strokeWidth=2;fontColor=#075985;" parent="1" vertex="1">
+          <mxGeometry x="810" y="288" width="350" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="n_pt" value="&lt;b&gt;PASSTHROUGH&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot;&gt;TLS terminé au pod&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;arcSize=22;shadow=1;fontSize=16;fillColor=#f3e8ff;strokeColor=#a855f7;strokeWidth=3;fontColor=#6b21a8;" parent="1" vertex="1">
+          <mxGeometry x="810" y="642" width="350" height="91" as="geometry" />
+        </mxCell>
+        <mxCell id="n_re" value="&lt;b&gt;REENCRYPT&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot;&gt;+ destinationCACertificate · issue par défaut&lt;/font&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot;&gt;cas type : Route → sidecar nginx (https)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;shadow=1;fontSize=17;fillColor=#dcfce7;strokeColor=#22c55e;strokeWidth=3;fontColor=#15803d;" parent="1" vertex="1">
+          <mxGeometry x="40" y="642" width="330" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="n_edge" value="&lt;b&gt;✖ EDGE non applicable&lt;/b&gt;&lt;br&gt;chiffrement pod-to-pod obligatoire" style="rounded=1;whiteSpace=wrap;html=1;arcSize=16;dashed=1;fontSize=12;fillColor=#fad9d5;strokeColor=#ae4132;" parent="1" vertex="1">
+          <mxGeometry x="440" y="640" width="300" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="e1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#94a3b8;strokeWidth=2;" parent="1" source="n_start" target="n_q0" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2" value="false / absent" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#94a3b8;strokeWidth=2;fontColor=#0e7490;fontSize=12;fontStyle=1;labelBackgroundColor=#ffffff;exitX=0.2;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="n_q0" target="n_info" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3" value="true" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;strokeColor=#94a3b8;strokeWidth=2;fontColor=#7c3aed;fontSize=12;fontStyle=1;labelBackgroundColor=#ffffff;exitX=0.8;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="n_q0" target="n_q1" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="s8_1X0MwQ2HWdCFS6Dsb-1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.53;entryY=0.022;entryDx=0;entryDy=0;entryPerimeter=0;strokeWidth=2;curved=0;" edge="1" parent="1" source="n_info" target="n_re">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
