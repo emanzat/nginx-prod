@@ -1,560 +1,282 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Ingress IKS → Route ROKS · analyseur de terminaison TLS (autonome)</title>
-<style>
-  :root{
+<!--
+  =====================================================================
+  Ingress IKS -> Route ROKS : analyseur de terminaison TLS
+  Fragment pour macro HTML Confluence (JS activé requis).
+  - Aucun CDN / aucun appel reseau (parser YAML embarque).
+  - Tout est scope sous #i2r-app : ne touche ni au CSS ni au JS de la page.
+  - Coller l'INTEGRALITE de ce bloc dans le corps de la macro HTML.
+  - Concu pour une seule instance par page.
+  =====================================================================
+-->
+<div id="i2r-app">
+  <div class="i2r-wrap">
+    <div class="i2r-head">
+      <h3>Ingress IKS &rarr; Route OpenShift (ROKS)</h3>
+      <p>Colle un objet Ingress (YAML ou JSON) issu d'IKS. L'outil determine la terminaison TLS equivalente &mdash; <b>passthrough</b>, <b>reencrypt</b> ou <b>edge</b> &mdash; et genere un exemple de Route. L'<b>edge</b> est signale en erreur (chiffrement pod-to-pod obligatoire). Aucun appel reseau.</p>
+    </div>
+
+    <div class="i2r-grid">
+      <div class="i2r-card">
+        <div class="i2r-h2">1 &middot; Objet Ingress</div>
+        <textarea class="i2r-input" spellcheck="false" placeholder="Colle ici le YAML ou le JSON de l'Ingress (ex. kubectl get ingress <nom> -o yaml)"></textarea>
+        <div class="i2r-row">
+          <button class="i2r-btn i2r-primary i2r-analyze">Analyser</button>
+          <button class="i2r-btn i2r-clear">Effacer</button>
+        </div>
+        <div class="i2r-samples">
+          <span class="i2r-muted">Exemples :</span>
+          <button class="i2r-btn i2r-ex" data-ex="reencrypt">reencrypt</button>
+          <button class="i2r-btn i2r-ex" data-ex="passthrough">passthrough</button>
+          <button class="i2r-btn i2r-ex" data-ex="edge">edge (erreur)</button>
+          <button class="i2r-btn i2r-ex" data-ex="conflict">passthrough + L7</button>
+        </div>
+      </div>
+
+      <div class="i2r-card">
+        <div class="i2r-h2">2 &middot; Resultat</div>
+        <div class="i2r-result"><div class="i2r-ph">Le verdict et la Route equivalente s'afficheront ici.</div></div>
+      </div>
+    </div>
+
+    <div class="i2r-foot">
+      Regle : <code>ssl-passthrough=true</code> &rarr; passthrough (ou reencrypt si fonction L7) &middot; sinon selon <code>backend-protocol</code> : HTTPS &rarr; reencrypt, HTTP/absent &rarr; edge (interdit). Parser YAML embarque, zero CDN.
+    </div>
+    <div class="i2r-toast"></div>
+  </div>
+
+  <style>
+  #i2r-app{
     --ink:#182230; --ink-soft:#475467; --line:#e3e8ef; --bg:#f6f8fb; --card:#ffffff;
     --blue:#0b6bcb; --violet:#7c3aed; --violet-bg:#f4effe; --green:#15803d; --green-bg:#e7f6ec;
     --red:#c01b2b; --red-bg:#fdecec; --amber:#b45309;
     --mono:ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
     --sans:"Segoe UI",-apple-system,BlinkMacSystemFont,Roboto,Helvetica,Arial,sans-serif;
+    color:var(--ink); font-family:var(--sans); font-size:15px; line-height:1.5;
+    position:relative;
   }
-  *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.5;font-size:15px}
-  .wrap{max-width:1180px;margin:0 auto;padding:22px 20px 60px}
-  header.top{border-bottom:1px solid var(--line);padding-bottom:16px;margin-bottom:20px}
-  header.top h1{font-size:20px;margin:0 0 4px;letter-spacing:-.2px}
-  header.top p{margin:0;color:var(--ink-soft);font-size:13.5px}
-  .grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
-  @media(max-width:900px){.grid{grid-template-columns:1fr}}
-  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px}
-  .card h2{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-soft);margin:0 0 12px;font-weight:700}
-  textarea{width:100%;min-height:340px;resize:vertical;border:1px solid var(--line);border-radius:8px;padding:12px;font-family:var(--mono);font-size:12.5px;color:var(--ink);background:#fcfdff;line-height:1.55}
-  textarea:focus{outline:2px solid #bcd4f2;border-color:#bcd4f2}
-  .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px}
-  button{font-family:var(--sans);font-size:13px;border-radius:8px;border:1px solid var(--line);background:#fff;color:var(--ink);padding:8px 13px;cursor:pointer;font-weight:600}
-  button:hover{border-color:#c7d0dd;background:#f9fbff}
-  button.primary{background:var(--blue);border-color:var(--blue);color:#fff}
-  button.primary:hover{background:#095bab}
-  .samples{margin-top:10px;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
-  .samples button{font-size:12px;padding:6px 10px;font-weight:500}
-  .muted{color:var(--ink-soft);font-size:12.5px}
-  .verdict{display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:10px;border:1px solid var(--line);margin-bottom:14px}
-  .badge{font-family:var(--mono);font-weight:700;font-size:18px;letter-spacing:.02em;padding:8px 14px;border-radius:8px;white-space:nowrap}
-  .v-passthrough{background:var(--violet-bg);border-color:#dcccfb}
-  .v-passthrough .badge{background:var(--violet);color:#fff}
-  .v-reencrypt{background:var(--green-bg);border-color:#c3e6cd}
-  .v-reencrypt .badge{background:var(--green);color:#fff}
-  .v-edge{background:var(--red-bg);border-color:#f3c6c6}
-  .v-edge .badge{background:var(--red);color:#fff}
-  .verdict .sub{font-size:13px}
-  .verdict .sub b{display:block;font-size:14px}
-  .err{background:var(--red-bg);border:1px solid #f0bcbc;border-left:4px solid var(--red);border-radius:8px;padding:12px 14px;margin-bottom:14px;color:#7a1420;font-size:13.5px}
-  .err b{color:var(--red)}
-  .tlspath{margin:4px 0 16px}
-  .tlspath svg{width:100%;height:96px}
-  .reason{border-top:1px solid var(--line);padding-top:12px;margin-top:4px}
-  .kv{display:flex;justify-content:space-between;gap:12px;padding:5px 0;border-bottom:1px dashed #eef1f6;font-size:13.5px}
-  .kv:last-child{border-bottom:0}
-  .kv span:first-child{color:var(--ink-soft)}
-  .kv code{font-family:var(--mono);font-size:12.5px;background:#f1f4f9;padding:1px 6px;border-radius:5px}
-  .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
-  .chip{font-size:12px;background:#eef2f8;color:#334155;border:1px solid #e0e6ef;border-radius:20px;padding:3px 10px;font-family:var(--mono)}
-  pre.yaml{background:#0f1729;color:#e6edf7;border-radius:10px;padding:14px;overflow:auto;font-family:var(--mono);font-size:12.5px;line-height:1.55;margin:0}
-  pre.yaml .cm{color:#7d8db0}
-  .yamlhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
-  .placeholder{color:var(--ink-soft);font-size:13.5px;padding:26px 4px;text-align:center}
-  footer{margin-top:26px;color:var(--ink-soft);font-size:12px;border-top:1px solid var(--line);padding-top:14px}
-  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:9px 16px;border-radius:8px;font-size:13px;opacity:0;transition:opacity .2s;pointer-events:none}
-  .toast.show{opacity:1}
-</style>
-</head>
-<body>
-<div class="wrap">
-  <header class="top">
-    <h1>Ingress IKS → Route OpenShift (ROKS)</h1>
-    <p>Colle un objet Ingress (YAML ou JSON) issu d'IKS. L'outil détermine la terminaison TLS équivalente — <b>passthrough</b>, <b>reencrypt</b> ou <b>edge</b> — et génère un exemple de Route. L'<b>edge</b> est signalé en erreur (chiffrement pod-to-pod obligatoire). Aucun appel réseau : 100 % autonome.</p>
-  </header>
+  #i2r-app *{box-sizing:border-box}
+  #i2r-app .i2r-wrap{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:18px}
+  #i2r-app .i2r-head{border-bottom:1px solid var(--line);padding-bottom:14px;margin-bottom:16px}
+  #i2r-app .i2r-head h3{font-size:19px;margin:0 0 4px;color:var(--ink);font-weight:700}
+  #i2r-app .i2r-head p{margin:0;color:var(--ink-soft);font-size:13px}
+  #i2r-app .i2r-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:860px){#i2r-app .i2r-grid{grid-template-columns:1fr}}
+  #i2r-app .i2r-card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px}
+  #i2r-app .i2r-h2{font-size:11.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-soft);margin:0 0 10px;font-weight:700}
+  #i2r-app textarea.i2r-input{width:100%;min-height:320px;resize:vertical;border:1px solid var(--line);border-radius:8px;padding:11px;font-family:var(--mono);font-size:12.5px;color:var(--ink);background:#fcfdff;line-height:1.55}
+  #i2r-app textarea.i2r-input:focus{outline:2px solid #bcd4f2;border-color:#bcd4f2}
+  #i2r-app .i2r-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:11px}
+  #i2r-app .i2r-btn{font-family:var(--sans);font-size:13px;border-radius:8px;border:1px solid var(--line);background:#fff;color:var(--ink);padding:8px 13px;cursor:pointer;font-weight:600;line-height:1.2}
+  #i2r-app .i2r-btn:hover{border-color:#c7d0dd;background:#f9fbff}
+  #i2r-app .i2r-btn.i2r-primary{background:var(--blue);border-color:var(--blue);color:#fff}
+  #i2r-app .i2r-btn.i2r-primary:hover{background:#095bab}
+  #i2r-app .i2r-samples{margin-top:10px;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+  #i2r-app .i2r-samples .i2r-btn{font-size:12px;padding:6px 10px;font-weight:500}
+  #i2r-app .i2r-muted{color:var(--ink-soft);font-size:12.5px}
+  #i2r-app .i2r-verdict{display:flex;align-items:center;gap:13px;padding:13px 15px;border-radius:10px;border:1px solid var(--line);margin-bottom:13px}
+  #i2r-app .i2r-badge{font-family:var(--mono);font-weight:700;font-size:18px;padding:8px 14px;border-radius:8px;white-space:nowrap}
+  #i2r-app .i2r-v-passthrough{background:var(--violet-bg);border-color:#dcccfb}
+  #i2r-app .i2r-v-passthrough .i2r-badge{background:var(--violet);color:#fff}
+  #i2r-app .i2r-v-reencrypt{background:var(--green-bg);border-color:#c3e6cd}
+  #i2r-app .i2r-v-reencrypt .i2r-badge{background:var(--green);color:#fff}
+  #i2r-app .i2r-v-edge{background:var(--red-bg);border-color:#f3c6c6}
+  #i2r-app .i2r-v-edge .i2r-badge{background:var(--red);color:#fff}
+  #i2r-app .i2r-verdict .i2r-sub{font-size:13px}
+  #i2r-app .i2r-verdict .i2r-sub b{display:block;font-size:14px;color:var(--ink)}
+  #i2r-app .i2r-err{background:var(--red-bg);border:1px solid #f0bcbc;border-left:4px solid var(--red);border-radius:8px;padding:11px 13px;margin-bottom:13px;color:#7a1420;font-size:13px}
+  #i2r-app .i2r-err b{color:var(--red)}
+  #i2r-app .i2r-tlspath{margin:4px 0 15px}
+  #i2r-app .i2r-tlspath svg{width:100%;height:92px}
+  #i2r-app .i2r-reason{border-top:1px solid var(--line);padding-top:11px;margin-top:4px}
+  #i2r-app .i2r-kv{display:flex;justify-content:space-between;gap:12px;padding:5px 0;border-bottom:1px dashed #eef1f6;font-size:13px}
+  #i2r-app .i2r-kv:last-child{border-bottom:0}
+  #i2r-app .i2r-kv span:first-child{color:var(--ink-soft)}
+  #i2r-app .i2r-kv code,#i2r-app .i2r-foot code,#i2r-app .i2r-err code{font-family:var(--mono);font-size:12px;background:#f1f4f9;padding:1px 6px;border-radius:5px;color:var(--ink)}
+  #i2r-app .i2r-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+  #i2r-app .i2r-chip{font-size:12px;background:#eef2f8;color:#334155;border:1px solid #e0e6ef;border-radius:20px;padding:3px 10px;font-family:var(--mono)}
+  #i2r-app pre.i2r-yaml{background:#0f1729;color:#e6edf7;border-radius:10px;padding:14px;overflow:auto;font-family:var(--mono);font-size:12.5px;line-height:1.55;margin:0;white-space:pre}
+  #i2r-app pre.i2r-yaml .i2r-cm{color:#7d8db0}
+  #i2r-app .i2r-yamlhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+  #i2r-app .i2r-yamlhead .i2r-h2{margin:0}
+  #i2r-app .i2r-ph{color:var(--ink-soft);font-size:13px;padding:26px 4px;text-align:center}
+  #i2r-app .i2r-foot{margin-top:16px;color:var(--ink-soft);font-size:12px;border-top:1px solid var(--line);padding-top:12px}
+  #i2r-app .i2r-toast{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:9px 16px;border-radius:8px;font-size:13px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:5}
+  #i2r-app .i2r-toast.i2r-show{opacity:1}
+  </style>
 
-  <div class="grid">
-    <section class="card">
-      <h2>1 · Objet Ingress</h2>
-      <textarea id="input" spellcheck="false" placeholder="Colle ici le YAML ou le JSON de l'Ingress&#10;(ex. kubectl get ingress &lt;nom&gt; -o yaml)"></textarea>
-      <div class="row">
-        <button class="primary" id="analyze">Analyser</button>
-        <button id="clear">Effacer</button>
-      </div>
-      <div class="samples">
-        <span class="muted">Exemples :</span>
-        <button data-ex="reencrypt">reencrypt</button>
-        <button data-ex="passthrough">passthrough</button>
-        <button data-ex="edge">edge (erreur)</button>
-        <button data-ex="conflict">passthrough + L7</button>
-      </div>
-    </section>
+  <script>
+  (function(){
+    function init(){
+      var root = document.getElementById('i2r-app');
+      if(!root || root.getAttribute('data-init')==='1') return;
+      root.setAttribute('data-init','1');
+      var $ = function(s){ return root.querySelector(s); };
 
-    <section class="card">
-      <h2>2 · Résultat</h2>
-      <div id="result"><div class="placeholder">Le verdict et la Route équivalente s'afficheront ici.</div></div>
-    </section>
-  </div>
+      /* ---------- Mini-parser YAML (sous-ensemble manifests K8s) + JSON ---------- */
+      function stripComment(line){var inS=false,inD=false,out='';for(var i=0;i<line.length;i++){var c=line[i];if(c==="'"&&!inD)inS=!inS;else if(c==='"'&&!inS)inD=!inD;if(c==='#'&&!inS&&!inD&&(i===0||/\s/.test(line[i-1])))break;out+=c;}return out;}
+      function findColon(s){var inS=false,inD=false;for(var i=0;i<s.length;i++){var c=s[i];if(c==="'"&&!inD)inS=!inS;else if(c==='"'&&!inS)inD=!inD;if(c===':'&&!inS&&!inD&&(i+1>=s.length||s[i+1]===' '))return i;}return s.indexOf(':');}
+      function unq(v){v=v.trim();if((v[0]==='"'&&v.slice(-1)==='"')||(v[0]==="'"&&v.slice(-1)==="'"))return v.slice(1,-1);return v;}
+      function scalar(v){v=v.trim();if(v==='')return null;if((v[0]==='"'&&v.slice(-1)==='"')||(v[0]==="'"&&v.slice(-1)==="'"))return v.slice(1,-1);if(v==='true')return true;if(v==='false')return false;if(v==='null'||v==='~')return null;if(/^-?\d+$/.test(v))return parseInt(v,10);return v;}
+      function parseFlow(str){var pos=0;function sw(){while(pos<str.length&&/\s/.test(str[pos]))pos++;}
+        function pv(){sw();if(str[pos]==='{')return po();if(str[pos]==='[')return pa();return ps();}
+        function po(){pos++;var o={};sw();if(str[pos]==='}'){pos++;return o;}while(pos<str.length){sw();var k=pk();sw();if(str[pos]===':')pos++;var v=pv();o[k]=v;sw();if(str[pos]===','){pos++;continue;}if(str[pos]==='}'){pos++;break;}break;}return o;}
+        function pa(){pos++;var a=[];sw();if(str[pos]===']'){pos++;return a;}while(pos<str.length){a.push(pv());sw();if(str[pos]===','){pos++;continue;}if(str[pos]===']'){pos++;break;}break;}return a;}
+        function pk(){sw();if(str[pos]==='"'||str[pos]==="'")return pq();var s='';while(pos<str.length&&!/[:,}\]]/.test(str[pos]))s+=str[pos++];return s.trim();}
+        function ps(){sw();if(str[pos]==='"'||str[pos]==="'")return pq();var s='';while(pos<str.length&&!/[,}\]]/.test(str[pos]))s+=str[pos++];return scalar(s.trim());}
+        function pq(){var q=str[pos++],s='';while(pos<str.length&&str[pos]!==q)s+=str[pos++];pos++;return s;}
+        return pv();}
+      function parseYAML(text){
+        var raw=text.replace(/\r\n?/g,'\n').split('\n'),lines=[];
+        for(var j=0;j<raw.length;j++){var l=stripComment(raw[j]);if(l.trim()==='')continue;var indent=l.length-l.replace(/^\s+/,'').length;lines.push({indent:indent,content:l.trim()});}
+        if(!lines.length)throw new Error("Contenu vide apres nettoyage.");
+        var i=0;
+        function node(indent){return lines[i].content[0]==='-'?seq(indent):map(indent);}
+        function map(indent){var o={};while(i<lines.length){var ln=lines[i];if(ln.indent<indent)break;if(ln.indent>indent)break;if(ln.content[0]==='-')break;var ci=findColon(ln.content);var k=unq(ln.content.slice(0,ci).trim());var rest=ln.content.slice(ci+1).trim();i++;if(rest===''){var nx=lines[i];if(nx&&nx.indent>indent)o[k]=node(nx.indent);else if(nx&&nx.indent===indent&&nx.content[0]==='-')o[k]=seq(indent);else o[k]=null;}else if(rest[0]==='{'||rest[0]==='[')o[k]=parseFlow(rest);else o[k]=scalar(rest);}return o;}
+        function seq(indent){var a=[];while(i<lines.length){var ln=lines[i];if(ln.indent<indent)break;if(ln.indent>indent)break;if(ln.content[0]!=='-')break;var after=ln.content.slice(1).trim();if(after===''){i++;var nx=lines[i];if(nx&&nx.indent>indent)a.push(node(nx.indent));else a.push(null);}else if(after[0]==='{'||after[0]==='['){a.push(parseFlow(after));i++;}else if(findColon(after)>=0&&after[0]!=='"'&&after[0]!=="'"){a.push(seqMap(ln.indent,after));}else{a.push(scalar(after));i++;}}return a;}
+        function seqMap(dash,first){var o={};var ci=findColon(first);var k=unq(first.slice(0,ci).trim());var rest=first.slice(ci+1).trim();i++;if(rest===''){var nx=lines[i];if(nx&&nx.indent>dash)o[k]=node(nx.indent);else o[k]=null;}else if(rest[0]==='{'||rest[0]==='[')o[k]=parseFlow(rest);else o[k]=scalar(rest);while(i<lines.length){var ln=lines[i];if(ln.indent<=dash)break;var m=map(ln.indent);for(var key in m)o[key]=m[key];break;}return o;}
+        return node(lines[0].indent);
+      }
+      function parseInput(text){
+        text=text.trim();
+        if(!text)throw new Error("Entree vide : colle un Ingress YAML ou JSON.");
+        try{return JSON.parse(text);}catch(e){}
+        try{return parseYAML(text);}catch(e2){throw new Error("Impossible de parser l'entree (YAML/JSON). "+e2.message);}
+      }
 
-  <footer>
-    Règle de décision : <code>ssl-passthrough=true</code> → passthrough (ou reencrypt si une fonction L7 est requise) · sinon selon <code>backend-protocol</code> : HTTPS → reencrypt, HTTP/absent → edge (interdit).
-    Page 100 % autonome : parser YAML embarqué, aucun CDN ni appel réseau. Compatible macro HTML/sandbox Confluence et ouverture locale.
-  </footer>
+      /* ---------- Exemples ---------- */
+      var EXAMPLES = {
+        reencrypt:"apiVersion: networking.k8s.io/v1\nkind: Ingress\nmetadata:\n  name: ap26330-api-contract\n  annotations:\n    nginx.ingress.kubernetes.io/ssl-passthrough: \"false\"\n    nginx.ingress.kubernetes.io/backend-protocol: \"HTTPS\"\n    nginx.ingress.kubernetes.io/affinity: \"cookie\"\n    nginx.ingress.kubernetes.io/session-cookie-name: \"nts-cookie\"\n    nginx.ingress.kubernetes.io/rewrite-target: /\n    nginx.ingress.kubernetes.io/proxy-read-timeout: \"30\"\n    nginx.ingress.kubernetes.io/ssl-redirect: \"true\"\nspec:\n  tls:\n    - hosts: [api-contract.example.com]\n      secretName: api-contract-tls\n  rules:\n    - host: api-contract.example.com\n      http:\n        paths:\n          - path: /api/contract\n            pathType: Prefix\n            backend:\n              service:\n                name: api-contract\n                port:\n                  number: 8443",
+        passthrough:"apiVersion: networking.k8s.io/v1\nkind: Ingress\nmetadata:\n  name: ap26307-front-mtls\n  annotations:\n    nginx.ingress.kubernetes.io/ssl-passthrough: \"true\"\n    nginx.ingress.kubernetes.io/backend-protocol: \"HTTPS\"\nspec:\n  rules:\n    - host: front-mtls.example.com\n      http:\n        paths:\n          - path: /\n            pathType: Prefix\n            backend:\n              service:\n                name: front-mtls\n                port:\n                  number: 8443",
+        edge:"apiVersion: networking.k8s.io/v1\nkind: Ingress\nmetadata:\n  name: ap26330-api-legacy\n  annotations:\n    nginx.ingress.kubernetes.io/ssl-passthrough: \"false\"\n    nginx.ingress.kubernetes.io/backend-protocol: \"HTTP\"\n    nginx.ingress.kubernetes.io/rewrite-target: /\nspec:\n  tls:\n    - hosts: [api-legacy.example.com]\n      secretName: api-legacy-tls\n  rules:\n    - host: api-legacy.example.com\n      http:\n        paths:\n          - path: /api/legacy\n            pathType: Prefix\n            backend:\n              service:\n                name: api-legacy\n                port:\n                  number: 8080",
+        conflict:"apiVersion: networking.k8s.io/v1\nkind: Ingress\nmetadata:\n  name: ap26330-api-mix\n  annotations:\n    nginx.ingress.kubernetes.io/ssl-passthrough: \"true\"\n    nginx.ingress.kubernetes.io/affinity: \"cookie\"\n    nginx.ingress.kubernetes.io/session-cookie-name: \"nts-cookie\"\nspec:\n  rules:\n    - host: api-mix.example.com\n      http:\n        paths:\n          - path: /a\n            pathType: Prefix\n            backend:\n              service: { name: svc-a, port: { number: 8443 } }\n          - path: /b\n            pathType: Prefix\n            backend:\n              service: { name: svc-b, port: { number: 8443 } }"
+      };
+
+      /* ---------- Analyse ---------- */
+      function ann(obj){return(obj&&obj.metadata&&obj.metadata.annotations)||{};}
+      function getAnn(a,key){var v=a['nginx.ingress.kubernetes.io/'+key];return(v!==undefined)?v:a['ingress.kubernetes.io/'+key];}
+      function allPaths(obj){var out=[];((obj.spec&&obj.spec.rules)||[]).forEach(function(r){((r.http&&r.http.paths)||[]).forEach(function(p){out.push(p);});});return out;}
+      function uniq(arr){var s={},o=[];arr.forEach(function(x){if(!s[x]){s[x]=1;o.push(x);}});return o;}
+      function detectL7(a,obj){var f=[];
+        if(getAnn(a,'affinity'))f.push('Sticky session (cookie)');
+        if(getAnn(a,'session-cookie-name')||getAnn(a,'session-cookie-expires')||getAnn(a,'session-cookie-max-age')||getAnn(a,'affinity-mode'))f.push('Cookie de session');
+        if(getAnn(a,'rewrite-target'))f.push('Rewrite de path');
+        if(String(getAnn(a,'use-regex')).toLowerCase()==='true')f.push('Regex de path');
+        if(getAnn(a,'app-root'))f.push('App root');
+        if(getAnn(a,'configuration-snippet'))f.push('configuration-snippet');
+        if(getAnn(a,'server-snippet'))f.push('server-snippet');
+        if(String(getAnn(a,'enable-cors')).toLowerCase()==='true'||getAnn(a,'cors-allow-origin'))f.push('CORS');
+        if(getAnn(a,'use-forwarded-headers'))f.push('Forwarded headers');
+        if(getAnn(a,'proxy_hide_header'))f.push('Masquage de header');
+        if(String(getAnn(a,'canary')).toLowerCase()==='true')f.push('Canary');
+        var np=allPaths(obj).length;if(np>1)f.push('Multi-path ('+np+' chemins)');
+        return uniq(f);
+      }
+      function analyze(obj){
+        if(!obj||(obj.kind&&String(obj.kind).toLowerCase()!=='ingress'))throw new Error("L'objet n'est pas un Ingress (kind attendu : Ingress).");
+        var a=ann(obj);
+        var passthrough=String(getAnn(a,'ssl-passthrough')).toLowerCase()==='true';
+        var backendProto=String(getAnn(a,'backend-protocol')||'HTTP').toUpperCase();
+        var backendHTTPS=backendProto==='HTTPS';
+        var l7=detectL7(a,obj);
+        var verdict,why,conflict=false;
+        if(passthrough){
+          if(l7.length){verdict='reencrypt';conflict=true;why="ssl-passthrough=true mais des fonctions L7 necessitent que le routeur voie le HTTP -> bascule en reencrypt (le backend termine deja le TLS).";}
+          else{verdict='passthrough';why="ssl-passthrough=true et aucune fonction L7 : l'application termine le TLS, le routeur ne dechiffre pas.";}
+        } else {
+          if(backendHTTPS){verdict='reencrypt';why="Le routeur termine le TLS ; le backend sert du TLS (backend-protocol=HTTPS) -> reencrypt.";}
+          else{verdict='edge';why="Le routeur termine le TLS et le backend est en clair (backend-protocol="+backendProto+") -> edge.";}
+        }
+        return {verdict:verdict,why:why,conflict:conflict,passthrough:passthrough,backendProto:backendProto,l7:l7,a:a,obj:obj};
+      }
+
+      /* ---------- Generation de Route ---------- */
+      function timeoutVal(t){t=String(t).trim();return /^\d+$/.test(t)?t+'s':t;}
+      function buildRoute(r){
+        var obj=r.obj,a=r.a,meta=obj.metadata||{},name=meta.name||'my-app';
+        var paths=allPaths(obj),p0=paths[0]||{},rule0=((obj.spec&&obj.spec.rules)||[])[0]||{};
+        var host=rule0.host||'<host>',path=p0.path||'/';
+        var svc=(p0.backend&&p0.backend.service)||{},svcName=svc.name||'<service>',svcPort=(svc.port&&(svc.port.number||svc.port.name))||'<port>';
+        var effective=(r.verdict==='edge')?'reencrypt':r.verdict,isPass=effective==='passthrough';
+        var A=[];
+        if(!isPass){
+          if(getAnn(a,'affinity')||getAnn(a,'session-cookie-name')){A.push('haproxy.router.openshift.io/disable_cookies: "false"');var ck=getAnn(a,'session-cookie-name');if(ck)A.push('router.openshift.io/cookie_name: "'+ck+'"');}
+          var rw=getAnn(a,'rewrite-target');if(rw)A.push('haproxy.router.openshift.io/rewrite-target: '+rw);
+          var to=getAnn(a,'proxy-read-timeout')||getAnn(a,'proxy-send-timeout');if(to)A.push('haproxy.router.openshift.io/timeout: '+timeoutVal(to));
+          if(getAnn(a,'use-forwarded-headers'))A.push('haproxy.router.openshift.io/set-forwarded-headers: append');
+        }
+        var sslRedirect=String(getAnn(a,'ssl-redirect')).toLowerCase()==='true'||String(getAnn(a,'force-ssl-redirect')).toLowerCase()==='true';
+        var sidecar=r.l7.filter(function(x){return /regex|snippet|CORS|Multi-path|App root|Masquage/i.test(x);});
+        var L=[];
+        L.push('apiVersion: route.openshift.io/v1');L.push('kind: Route');L.push('metadata:');L.push('  name: '+name);
+        if(A.length){L.push('  annotations:');A.forEach(function(x){L.push('    '+x);});}
+        L.push('spec:');L.push('  host: '+host);
+        if(!isPass)L.push('  path: '+path+'                 <span class="i2r-cm"># matching PREFIXE (pas de regex)</span>');
+        L.push('  to:');L.push('    kind: Service');L.push('    name: '+svcName);L.push('    weight: 100');
+        L.push('  port:');L.push('    targetPort: '+svcPort);
+        L.push('  tls:');L.push('    termination: '+effective);
+        if(effective==='reencrypt'){
+          L.push('    <span class="i2r-cm"># CA ayant signe le certificat presente par le backend (sidecar nginx)</span>');
+          L.push('    destinationCACertificate: |-');L.push('      -----BEGIN CERTIFICATE-----');L.push('      &lt;CA du backend&gt;');L.push('      -----END CERTIFICATE-----');
+        }
+        if(sslRedirect||!isPass){L.push('    insecureEdgeTerminationPolicy: Redirect'+(sslRedirect?' <span class="i2r-cm"># reproduit ssl-redirect</span>':''));}
+        var out=L.join('\n');
+        if(sidecar.length){out+='\n\n<span class="i2r-cm"># A porter sur le sidecar nginx (non exprimable sur la Route) :\n#   '+sidecar.join(', ')+'</span>';}
+        return out;
+      }
+
+      /* ---------- Schema chemin TLS ---------- */
+      function tlsDiagram(verdict){
+        function seg(x1,x2,y,color,dash,label){return '<line x1="'+x1+'" y1="'+y+'" x2="'+x2+'" y2="'+y+'" stroke="'+color+'" stroke-width="3" '+(dash?'stroke-dasharray="6 5"':'')+'/><text x="'+((x1+x2)/2)+'" y="'+(y-9)+'" text-anchor="middle" font-size="11" fill="'+color+'" font-family="monospace">'+label+'</text>';}
+        function nodeR(x,label,fill,stroke){return '<rect x="'+(x-42)+'" y="46" width="84" height="30" rx="7" fill="'+fill+'" stroke="'+stroke+'"/><text x="'+x+'" y="65" text-anchor="middle" font-size="12" fill="#182230" font-weight="600">'+label+'</text>';}
+        var C=70,R=330,P=590,y=61,segs='';
+        if(verdict==='passthrough')segs=seg(C+42,P-42,y-30,'#7c3aed',false,'TLS de bout en bout - le routeur ne dechiffre pas');
+        else if(verdict==='reencrypt')segs=seg(C+42,R-42,y,'#15803d',false,'TLS')+seg(R+42,P-42,y,'#15803d',false,'TLS (re-chiffre)');
+        else segs=seg(C+42,R-42,y,'#c01b2b',false,'TLS')+seg(R+42,P-42,y,'#c01b2b',true,'EN CLAIR X');
+        var rf=verdict==='passthrough'?'#f4effe':'#eef4fb';
+        return '<svg viewBox="0 0 660 96" role="img" aria-label="Chemin TLS">'+segs+nodeR(C,'Client','#ffffff','#cbd5e1')+nodeR(R,'Router',rf,'#c3d3e8')+nodeR(P,'Pod','#ffffff','#cbd5e1')+'</svg>';
+      }
+
+      /* ---------- Rendu ---------- */
+      function render(r){
+        var cls='i2r-v-'+r.verdict,label=r.verdict.toUpperCase();
+        var subMap={passthrough:'TLS termine au pod',reencrypt:'Routeur termine puis re-chiffre vers le backend',edge:'Routeur termine, backend en clair'};
+        var html='';
+        html+='<div class="i2r-verdict '+cls+'"><span class="i2r-badge">'+label+'</span><div class="i2r-sub"><b>'+subMap[r.verdict]+'</b><span class="i2r-muted">'+r.why+'</span></div></div>';
+        html+='<div class="i2r-tlspath">'+tlsDiagram(r.verdict)+'</div>';
+        if(r.verdict==='edge'){html+='<div class="i2r-err"><b>&#9940; EDGE interdit.</b> Le chiffrement pod-to-pod est obligatoire : aucun trafic en clair vers le pod. Le backend est en clair (<code>backend-protocol='+r.backendProto+'</code>). <b>Action :</b> faire servir le TLS par le backend (ex. sidecar nginx) puis passer la Route en <code>reencrypt</code>. La Route ci-dessous est la version conforme proposee.</div>';}
+        if(r.conflict){html+='<div class="i2r-err" style="border-left-color:var(--amber);background:#fff8ee;color:#7a4a00"><b style="color:var(--amber)">&#9888; Incoherence.</b> <code>ssl-passthrough=true</code> est declare mais des fonctions L7 sont presentes (elles ne fonctionnent pas en passthrough). Traduction en <code>reencrypt</code>.</div>';}
+        html+='<div class="i2r-reason">';
+        html+='<div class="i2r-kv"><span>ssl-passthrough</span><code>'+r.passthrough+'</code></div>';
+        html+='<div class="i2r-kv"><span>backend-protocol</span><code>'+r.backendProto+'</code></div>';
+        html+='<div class="i2r-kv"><span>Fonctions L7 detectees</span><code>'+r.l7.length+'</code></div>';
+        if(r.l7.length){html+='<div class="i2r-chips">'+r.l7.map(function(x){return '<span class="i2r-chip">'+x+'</span>';}).join('')+'</div>';}
+        html+='</div>';
+        var routeText=buildRoute(r);
+        var plain=routeText.replace(/<span class="i2r-cm">/g,'').replace(/<\/span>/g,'');
+        html+='<div style="margin-top:16px"><div class="i2r-yamlhead"><div class="i2r-h2">Route OpenShift equivalente</div><button class="i2r-btn i2r-copy">Copier</button></div><pre class="i2r-yaml">'+routeText+'</pre></div>';
+        $('.i2r-result').innerHTML=html;
+        var cbtn=$('.i2r-copy');if(cbtn)cbtn.addEventListener('click',function(){copy(plain);});
+      }
+      function showError(msg){$('.i2r-result').innerHTML='<div class="i2r-err"><b>Erreur de lecture.</b> '+msg+'</div>';}
+
+      /* ---------- UI ---------- */
+      function copy(text){
+        if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).then(function(){toast('Route copiee');}).catch(function(){fb(text);});}
+        else fb(text);
+      }
+      function fb(text){var ta=document.createElement('textarea');ta.value=text;root.appendChild(ta);ta.select();try{document.execCommand('copy');toast('Route copiee');}catch(e){toast('Copie impossible');}root.removeChild(ta);}
+      var tt;
+      function toast(m){var t=$('.i2r-toast');t.textContent=m;t.classList.add('i2r-show');clearTimeout(tt);tt=setTimeout(function(){t.classList.remove('i2r-show');},1600);}
+
+      $('.i2r-analyze').addEventListener('click',function(){try{render(analyze(parseInput($('.i2r-input').value)));}catch(e){showError(e.message);}});
+      $('.i2r-clear').addEventListener('click',function(){$('.i2r-input').value='';$('.i2r-result').innerHTML='<div class="i2r-ph">Le verdict et la Route equivalente s\'afficheront ici.</div>';});
+      var exBtns=root.querySelectorAll('.i2r-ex');
+      for(var b=0;b<exBtns.length;b++){(function(btn){btn.addEventListener('click',function(){$('.i2r-input').value=EXAMPLES[btn.getAttribute('data-ex')];try{render(analyze(parseInput(EXAMPLES[btn.getAttribute('data-ex')])));}catch(e){showError(e.message);}});})(exBtns[b]);}
+
+      $('.i2r-input').value=EXAMPLES.reencrypt;
+      try{render(analyze(parseInput(EXAMPLES.reencrypt)));}catch(e){}
+    }
+    if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+  })();
+  </script>
 </div>
-<div class="toast" id="toast"></div>
-
-<script>
-"use strict";
-
-/* ============================================================
-   Mini-parser YAML autonome (sous-ensemble manifests Kubernetes)
-   + support JSON natif. Aucune dépendance réseau.
-   ============================================================ */
-function stripComment(line){
-  let inS=false,inD=false,out='';
-  for(let i=0;i<line.length;i++){
-    const c=line[i];
-    if(c==="'"&&!inD)inS=!inS; else if(c==='"'&&!inS)inD=!inD;
-    if(c==='#'&&!inS&&!inD&&(i===0||/\s/.test(line[i-1])))break;
-    out+=c;
-  }
-  return out;
-}
-function findColon(s){
-  let inS=false,inD=false;
-  for(let i=0;i<s.length;i++){
-    const c=s[i];
-    if(c==="'"&&!inD)inS=!inS; else if(c==='"'&&!inS)inD=!inD;
-    if(c===':'&&!inS&&!inD&&(i+1>=s.length||s[i+1]===' '))return i;
-  }
-  return s.indexOf(':');
-}
-function unq(v){
-  v=v.trim();
-  if((v[0]==='"'&&v.slice(-1)==='"')||(v[0]==="'"&&v.slice(-1)==="'"))return v.slice(1,-1);
-  return v;
-}
-function scalar(v){
-  v=v.trim();
-  if(v==='')return null;
-  if((v[0]==='"'&&v.slice(-1)==='"')||(v[0]==="'"&&v.slice(-1)==="'"))return v.slice(1,-1);
-  if(v==='true')return true; if(v==='false')return false;
-  if(v==='null'||v==='~')return null;
-  if(/^-?\d+$/.test(v))return parseInt(v,10);
-  return v;
-}
-function parseFlow(str){
-  let pos=0;
-  const sw=()=>{while(pos<str.length&&/\s/.test(str[pos]))pos++;};
-  function pv(){sw(); if(str[pos]==='{')return po(); if(str[pos]==='[')return pa(); return ps();}
-  function po(){pos++;const o={};sw(); if(str[pos]==='}'){pos++;return o;}
-    while(pos<str.length){sw();const k=pk();sw(); if(str[pos]===':')pos++; const v=pv(); o[k]=v; sw();
-      if(str[pos]===','){pos++;continue;} if(str[pos]==='}'){pos++;break;} break;} return o;}
-  function pa(){pos++;const a=[];sw(); if(str[pos]===']'){pos++;return a;}
-    while(pos<str.length){a.push(pv());sw();
-      if(str[pos]===','){pos++;continue;} if(str[pos]===']'){pos++;break;} break;} return a;}
-  function pk(){sw(); if(str[pos]==='"'||str[pos]==="'")return pq(); let s='';
-    while(pos<str.length&&!/[:,}\]]/.test(str[pos]))s+=str[pos++]; return s.trim();}
-  function ps(){sw(); if(str[pos]==='"'||str[pos]==="'")return pq(); let s='';
-    while(pos<str.length&&!/[,}\]]/.test(str[pos]))s+=str[pos++]; return scalar(s.trim());}
-  function pq(){const q=str[pos++];let s=''; while(pos<str.length&&str[pos]!==q)s+=str[pos++]; pos++; return s;}
-  return pv();
-}
-function parseYAML(text){
-  const raw=text.replace(/\r\n?/g,'\n').split('\n');
-  const lines=[];
-  for(let l of raw){
-    l=stripComment(l);
-    if(l.trim()==='')continue;
-    const indent=l.length-l.replace(/^\s+/,'').length;
-    lines.push({indent,content:l.trim()});
-  }
-  if(!lines.length) throw new Error("Contenu vide après nettoyage.");
-  let i=0;
-  function node(indent){const f=lines[i]; return f.content[0]==='-' ? seq(indent) : map(indent);}
-  function map(indent){
-    const o={};
-    while(i<lines.length){
-      const ln=lines[i];
-      if(ln.indent<indent)break; if(ln.indent>indent)break; if(ln.content[0]==='-')break;
-      const ci=findColon(ln.content);
-      const k=unq(ln.content.slice(0,ci).trim());
-      let rest=ln.content.slice(ci+1).trim();
-      i++;
-      if(rest===''){
-        const nx=lines[i];
-        if(nx&&nx.indent>indent)o[k]=node(nx.indent);
-        else if(nx&&nx.indent===indent&&nx.content[0]==='-')o[k]=seq(indent);
-        else o[k]=null;
-      } else if(rest[0]==='{'||rest[0]==='[') o[k]=parseFlow(rest);
-      else o[k]=scalar(rest);
-    }
-    return o;
-  }
-  function seq(indent){
-    const a=[];
-    while(i<lines.length){
-      const ln=lines[i];
-      if(ln.indent<indent)break; if(ln.indent>indent)break; if(ln.content[0]!=='-')break;
-      const after=ln.content.slice(1).trim();
-      if(after===''){
-        i++; const nx=lines[i];
-        if(nx&&nx.indent>indent)a.push(node(nx.indent)); else a.push(null);
-      } else if(after[0]==='{'||after[0]==='['){ a.push(parseFlow(after)); i++; }
-      else if(findColon(after)>=0&&after[0]!=='"'&&after[0]!=="'"){ a.push(seqMap(ln.indent,after)); }
-      else { a.push(scalar(after)); i++; }
-    }
-    return a;
-  }
-  function seqMap(dash,first){
-    const o={};
-    const ci=findColon(first);
-    const k=unq(first.slice(0,ci).trim());
-    let rest=first.slice(ci+1).trim();
-    i++;
-    if(rest===''){const nx=lines[i]; if(nx&&nx.indent>dash)o[k]=node(nx.indent); else o[k]=null;}
-    else if(rest[0]==='{'||rest[0]==='[')o[k]=parseFlow(rest);
-    else o[k]=scalar(rest);
-    while(i<lines.length){ const ln=lines[i]; if(ln.indent<=dash)break; Object.assign(o,map(ln.indent)); break; }
-    return o;
-  }
-  return node(lines[0].indent);
-}
-
-function parseInput(text){
-  text=text.trim();
-  if(!text) throw new Error("Entrée vide : colle un Ingress YAML ou JSON.");
-  try { return JSON.parse(text); } catch(e){}
-  try { return parseYAML(text); }
-  catch(e){ throw new Error("Impossible de parser l'entrée (YAML/JSON). " + e.message); }
-}
-
-/* ============================================================
-   Exemples
-   ============================================================ */
-const EXAMPLES = {
-  reencrypt:`apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: ap26330-api-contract
-  annotations:
-    nginx.ingress.kubernetes.io/ssl-passthrough: "false"
-    nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
-    nginx.ingress.kubernetes.io/affinity: "cookie"
-    nginx.ingress.kubernetes.io/session-cookie-name: "nts-cookie"
-    nginx.ingress.kubernetes.io/rewrite-target: /
-    nginx.ingress.kubernetes.io/proxy-read-timeout: "30"
-    nginx.ingress.kubernetes.io/ssl-redirect: "true"
-spec:
-  tls:
-    - hosts: [api-contract.example.com]
-      secretName: api-contract-tls
-  rules:
-    - host: api-contract.example.com
-      http:
-        paths:
-          - path: /api/contract
-            pathType: Prefix
-            backend:
-              service:
-                name: api-contract
-                port:
-                  number: 8443`,
-  passthrough:`apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: ap26307-front-mtls
-  annotations:
-    nginx.ingress.kubernetes.io/ssl-passthrough: "true"
-    nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
-spec:
-  rules:
-    - host: front-mtls.example.com
-      http:
-        paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: front-mtls
-                port:
-                  number: 8443`,
-  edge:`apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: ap26330-api-legacy
-  annotations:
-    nginx.ingress.kubernetes.io/ssl-passthrough: "false"
-    nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
-    nginx.ingress.kubernetes.io/rewrite-target: /
-spec:
-  tls:
-    - hosts: [api-legacy.example.com]
-      secretName: api-legacy-tls
-  rules:
-    - host: api-legacy.example.com
-      http:
-        paths:
-          - path: /api/legacy
-            pathType: Prefix
-            backend:
-              service:
-                name: api-legacy
-                port:
-                  number: 8080`,
-  conflict:`apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: ap26330-api-mix
-  annotations:
-    nginx.ingress.kubernetes.io/ssl-passthrough: "true"
-    nginx.ingress.kubernetes.io/affinity: "cookie"
-    nginx.ingress.kubernetes.io/session-cookie-name: "nts-cookie"
-spec:
-  rules:
-    - host: api-mix.example.com
-      http:
-        paths:
-          - path: /a
-            pathType: Prefix
-            backend:
-              service: { name: svc-a, port: { number: 8443 } }
-          - path: /b
-            pathType: Prefix
-            backend:
-              service: { name: svc-b, port: { number: 8443 } }`
-};
-
-/* ============================================================
-   Analyse
-   ============================================================ */
-function ann(obj){ return (obj && obj.metadata && obj.metadata.annotations) || {}; }
-function getAnn(a, key){
-  const v = a['nginx.ingress.kubernetes.io/'+key];
-  return (v!==undefined) ? v : a['ingress.kubernetes.io/'+key];
-}
-function allPaths(obj){
-  const out=[];
-  ((obj.spec&&obj.spec.rules)||[]).forEach(r=>{ ((r.http&&r.http.paths)||[]).forEach(p=>out.push(p)); });
-  return out;
-}
-function detectL7(a, obj){
-  const f=[];
-  if(getAnn(a,'affinity')) f.push('Sticky session (cookie)');
-  if(getAnn(a,'session-cookie-name')||getAnn(a,'session-cookie-expires')||getAnn(a,'session-cookie-max-age')||getAnn(a,'affinity-mode')) f.push('Cookie de session');
-  if(getAnn(a,'rewrite-target')) f.push('Rewrite de path');
-  if(String(getAnn(a,'use-regex')).toLowerCase()==='true') f.push('Regex de path');
-  if(getAnn(a,'app-root')) f.push('App root');
-  if(getAnn(a,'configuration-snippet')) f.push('configuration-snippet');
-  if(getAnn(a,'server-snippet')) f.push('server-snippet');
-  if(String(getAnn(a,'enable-cors')).toLowerCase()==='true' || getAnn(a,'cors-allow-origin')) f.push('CORS');
-  if(getAnn(a,'use-forwarded-headers')) f.push('Forwarded headers');
-  if(getAnn(a,'proxy_hide_header')) f.push('Masquage de header');
-  if(String(getAnn(a,'canary')).toLowerCase()==='true') f.push('Canary');
-  const np = allPaths(obj).length;
-  if(np>1) f.push('Multi-path ('+np+' chemins)');
-  return [...new Set(f)];
-}
-function analyze(obj){
-  if(!obj || (obj.kind && String(obj.kind).toLowerCase()!=='ingress'))
-    throw new Error("L'objet n'est pas un Ingress (kind attendu : Ingress).");
-  const a = ann(obj);
-  const passthrough = String(getAnn(a,'ssl-passthrough')).toLowerCase()==='true';
-  const backendProto = String(getAnn(a,'backend-protocol')||'HTTP').toUpperCase();
-  const backendHTTPS = backendProto==='HTTPS';
-  const l7 = detectL7(a, obj);
-  let verdict, why, conflict=false;
-  if(passthrough){
-    if(l7.length){
-      verdict='reencrypt'; conflict=true;
-      why="ssl-passthrough=true mais des fonctions L7 nécessitent que le routeur voie le HTTP → bascule en reencrypt (le backend termine déjà le TLS).";
-    } else {
-      verdict='passthrough';
-      why="ssl-passthrough=true et aucune fonction L7 : l'application termine le TLS, le routeur ne déchiffre pas.";
-    }
-  } else {
-    if(backendHTTPS){
-      verdict='reencrypt';
-      why="Le routeur termine le TLS ; le backend sert du TLS (backend-protocol=HTTPS) → reencrypt.";
-    } else {
-      verdict='edge';
-      why="Le routeur termine le TLS et le backend est en clair (backend-protocol="+backendProto+") → edge.";
-    }
-  }
-  return {verdict, why, conflict, passthrough, backendProto, backendHTTPS, l7, a, obj};
-}
-
-/* ============================================================
-   Génération de Route
-   ============================================================ */
-function timeoutVal(t){ t=String(t).trim(); return /^\d+$/.test(t) ? t+'s' : t; }
-function buildRoute(r){
-  const {obj,a} = r;
-  const meta = obj.metadata||{};
-  const name = meta.name || 'my-app';
-  const paths = allPaths(obj);
-  const p0 = paths[0]||{};
-  const rule0 = ((obj.spec&&obj.spec.rules)||[])[0]||{};
-  const host = rule0.host || '<host>';
-  const path = p0.path || '/';
-  const svc = (p0.backend&&p0.backend.service)||{};
-  const svcName = svc.name || '<service>';
-  const svcPort = (svc.port&&(svc.port.number||svc.port.name)) || '<port>';
-
-  const effective = (r.verdict==='edge') ? 'reencrypt' : r.verdict;
-  const isPass = effective==='passthrough';
-
-  const A=[];
-  if(!isPass){
-    if(getAnn(a,'affinity')||getAnn(a,'session-cookie-name')){
-      A.push('haproxy.router.openshift.io/disable_cookies: "false"');
-      const ck=getAnn(a,'session-cookie-name');
-      if(ck) A.push('router.openshift.io/cookie_name: "'+ck+'"');
-    }
-    const rw=getAnn(a,'rewrite-target'); if(rw) A.push('haproxy.router.openshift.io/rewrite-target: '+rw);
-    const to=getAnn(a,'proxy-read-timeout')||getAnn(a,'proxy-send-timeout'); if(to) A.push('haproxy.router.openshift.io/timeout: '+timeoutVal(to));
-    if(getAnn(a,'use-forwarded-headers')) A.push('haproxy.router.openshift.io/set-forwarded-headers: append');
-  }
-  const sslRedirect = String(getAnn(a,'ssl-redirect')).toLowerCase()==='true' || String(getAnn(a,'force-ssl-redirect')).toLowerCase()==='true';
-  const sidecar = r.l7.filter(x=>/regex|snippet|CORS|Multi-path|App root|Masquage/i.test(x));
-
-  const L=[];
-  L.push('apiVersion: route.openshift.io/v1');
-  L.push('kind: Route');
-  L.push('metadata:');
-  L.push('  name: '+name);
-  if(A.length){ L.push('  annotations:'); A.forEach(x=>L.push('    '+x)); }
-  L.push('spec:');
-  L.push('  host: '+host);
-  if(!isPass) L.push('  path: '+path+'                 <span class="cm"># matching PRÉFIXE (pas de regex)</span>');
-  L.push('  to:');
-  L.push('    kind: Service');
-  L.push('    name: '+svcName);
-  L.push('    weight: 100');
-  L.push('  port:');
-  L.push('    targetPort: '+svcPort);
-  L.push('  tls:');
-  L.push('    termination: '+effective);
-  if(effective==='reencrypt'){
-    L.push('    <span class="cm"># CA ayant signé le certificat présenté par le backend (sidecar nginx)</span>');
-    L.push('    destinationCACertificate: |-');
-    L.push('      -----BEGIN CERTIFICATE-----');
-    L.push('      &lt;CA du backend&gt;');
-    L.push('      -----END CERTIFICATE-----');
-  }
-  if(sslRedirect || !isPass){
-    L.push('    insecureEdgeTerminationPolicy: Redirect'+(sslRedirect?' <span class="cm"># reproduit ssl-redirect</span>':''));
-  }
-  let out = L.join('\n');
-  if(sidecar.length){
-    out += '\n\n<span class="cm"># À porter sur le sidecar nginx (non exprimable sur la Route) :\n#   '+sidecar.join(', ')+'</span>';
-  }
-  return out;
-}
-
-/* ============================================================
-   Schéma chemin TLS
-   ============================================================ */
-function tlsDiagram(verdict){
-  const seg = (x1,x2,y,color,dash,label)=>
-    '<line x1="'+x1+'" y1="'+y+'" x2="'+x2+'" y2="'+y+'" stroke="'+color+'" stroke-width="3" '+(dash?'stroke-dasharray="6 5"':'')+'/>'+
-    '<text x="'+((x1+x2)/2)+'" y="'+(y-9)+'" text-anchor="middle" font-size="11" fill="'+color+'" font-family="monospace">'+label+'</text>';
-  const node = (x,label,fill,stroke)=>
-    '<rect x="'+(x-42)+'" y="46" width="84" height="30" rx="7" fill="'+fill+'" stroke="'+stroke+'"/>'+
-    '<text x="'+x+'" y="65" text-anchor="middle" font-size="12" fill="#182230" font-weight="600">'+label+'</text>';
-  const C=70, R=330, P=590, y=61;
-  let segs='';
-  if(verdict==='passthrough'){
-    segs = seg(C+42,P-42,y-30,'#7c3aed',false,'TLS de bout en bout — le routeur ne déchiffre pas');
-  } else if(verdict==='reencrypt'){
-    segs = seg(C+42,R-42,y,'#15803d',false,'TLS')+seg(R+42,P-42,y,'#15803d',false,'TLS (re-chiffré)');
-  } else {
-    segs = seg(C+42,R-42,y,'#c01b2b',false,'TLS')+seg(R+42,P-42,y,'#c01b2b',true,'EN CLAIR ✖');
-  }
-  const routerFill = verdict==='passthrough' ? '#f4effe' : '#eef4fb';
-  return '<svg viewBox="0 0 660 96" role="img" aria-label="Chemin TLS">'+
-    segs + node(C,'Client','#ffffff','#cbd5e1') + node(R,'Router',routerFill,'#c3d3e8') + node(P,'Pod','#ffffff','#cbd5e1') +
-    '</svg>';
-}
-
-/* ============================================================
-   Rendu
-   ============================================================ */
-function render(r){
-  const cls = 'v-'+r.verdict;
-  const label = r.verdict.toUpperCase();
-  const subMap = {
-    passthrough:'TLS terminé au pod',
-    reencrypt:'Routeur termine puis re-chiffre vers le backend',
-    edge:'Routeur termine, backend en clair'
-  };
-  let html='';
-  html += '<div class="verdict '+cls+'"><span class="badge">'+label+'</span>'+
-          '<div class="sub"><b>'+subMap[r.verdict]+'</b><span class="muted">'+r.why+'</span></div></div>';
-  html += '<div class="tlspath">'+tlsDiagram(r.verdict)+'</div>';
-
-  if(r.verdict==='edge'){
-    html += '<div class="err"><b>⛔ EDGE interdit.</b> Le chiffrement pod-to-pod est obligatoire : aucun trafic en clair vers le pod. '+
-            'Le backend est en clair (<code>backend-protocol='+r.backendProto+'</code>). '+
-            '<b>Action :</b> faire servir le TLS par le backend (ex. sidecar nginx) puis passer la Route en <code>reencrypt</code>. La Route ci-dessous est la version conforme proposée.</div>';
-  }
-  if(r.conflict){
-    html += '<div class="err" style="border-left-color:var(--amber);background:#fff8ee;color:#7a4a00">'+
-            '<b style="color:var(--amber)">⚠ Incohérence.</b> <code>ssl-passthrough=true</code> est déclaré mais des fonctions L7 sont présentes (elles ne fonctionnent pas en passthrough). Traduction en <code>reencrypt</code>.</div>';
-  }
-
-  html += '<div class="reason">';
-  html += '<div class="kv"><span>ssl-passthrough</span><code>'+r.passthrough+'</code></div>';
-  html += '<div class="kv"><span>backend-protocol</span><code>'+r.backendProto+'</code></div>';
-  html += '<div class="kv"><span>Fonctions L7 détectées</span><code>'+r.l7.length+'</code></div>';
-  if(r.l7.length){ html += '<div class="chips">'+r.l7.map(x=>'<span class="chip">'+x+'</span>').join('')+'</div>'; }
-  html += '</div>';
-
-  const routeText = buildRoute(r);
-  const plain = routeText.replace(/<span class="cm">/g,'').replace(/<\/span>/g,'');
-  html += '<div style="margin-top:16px"><div class="yamlhead"><h2 style="margin:0">Route OpenShift équivalente</h2>'+
-          '<button id="copyRoute">Copier</button></div><pre class="yaml" id="routeYaml">'+routeText+'</pre></div>';
-
-  const res = document.getElementById('result');
-  res.innerHTML = html;
-  const btn = document.getElementById('copyRoute');
-  if(btn) btn.addEventListener('click',()=>copy(plain));
-}
-function showError(msg){
-  document.getElementById('result').innerHTML = '<div class="err"><b>Erreur de lecture.</b> '+msg+'</div>';
-}
-
-/* ============================================================
-   UI
-   ============================================================ */
-function copy(text){
-  if(navigator.clipboard && navigator.clipboard.writeText){
-    navigator.clipboard.writeText(text).then(()=>toast('Route copiée')).catch(()=>fallbackCopy(text));
-  } else fallbackCopy(text);
-}
-function fallbackCopy(text){
-  const ta=document.createElement('textarea'); ta.value=text; document.body.appendChild(ta); ta.select();
-  try{ document.execCommand('copy'); toast('Route copiée'); }catch(e){ toast('Copie impossible'); }
-  document.body.removeChild(ta);
-}
-let tt;
-function toast(m){
-  const t=document.getElementById('toast'); t.textContent=m; t.classList.add('show');
-  clearTimeout(tt); tt=setTimeout(()=>t.classList.remove('show'),1600);
-}
-
-document.getElementById('analyze').addEventListener('click',()=>{
-  try{ render(analyze(parseInput(document.getElementById('input').value))); }
-  catch(e){ showError(e.message); }
-});
-document.getElementById('clear').addEventListener('click',()=>{
-  document.getElementById('input').value='';
-  document.getElementById('result').innerHTML='<div class="placeholder">Le verdict et la Route équivalente s\'afficheront ici.</div>';
-});
-document.querySelectorAll('.samples button').forEach(b=>{
-  b.addEventListener('click',()=>{
-    document.getElementById('input').value = EXAMPLES[b.dataset.ex];
-    try{ render(analyze(parseInput(EXAMPLES[b.dataset.ex]))); }catch(e){ showError(e.message); }
-  });
-});
-document.getElementById('input').value = EXAMPLES.reencrypt;
-try{ render(analyze(parseInput(EXAMPLES.reencrypt))); }catch(e){}
-</script>
-</body>
-</html>
