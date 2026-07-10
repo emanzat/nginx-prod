@@ -1,24 +1,20 @@
-<!--
-  =====================================================================
-  Ingress IKS -> Route ROKS : analyseur de terminaison TLS
-  Fragment pour macro HTML Confluence (JS activé requis).
-  - Aucun CDN / aucun appel reseau (parser YAML embarque).
-  - Tout est scope sous #i2r-app : ne touche ni au CSS ni au JS de la page.
-  - Coller l'INTEGRALITE de ce bloc dans le corps de la macro HTML.
-  - Concu pour une seule instance par page.
-  =====================================================================
--->
+
 <div id="i2r-app">
   <div class="i2r-wrap">
     <div class="i2r-head">
       <h3>Ingress IKS &rarr; Route OpenShift (ROKS)</h3>
-      <p>Colle un objet Ingress (YAML ou JSON) issu d'IKS. L'outil determine la terminaison TLS equivalente &mdash; <b>passthrough</b>, <b>reencrypt</b> ou <b>edge</b> &mdash; et genere un exemple de Route. L'<b>edge</b> est signale en erreur (chiffrement pod-to-pod obligatoire). Aucun appel reseau.</p>
+      <p>Colle un objet Ingress (YAML) issu d'IKS. L'outil determine la terminaison TLS equivalente &mdash; <b>passthrough</b>, <b>reencrypt</b> ou <b>edge</b> &mdash; et genere un exemple de Route. L'<b>edge</b> est signale en erreur (chiffrement pod-to-pod obligatoire). Aucun appel reseau.</p>
+    </div>
+
+    <div class="i2r-notice">
+      <span class="i2r-notice-ico">&#9888;</span>
+      <div><b>Outil de test / prototype.</b> Ce traducteur donne une premiere orientation automatisee mais ne remplace pas une revue humaine. Une analyse formelle par l'ITOPS reste necessaire avant toute application en production.</div>
     </div>
 
     <div class="i2r-grid">
       <div class="i2r-card">
         <div class="i2r-h2">1 &middot; Objet Ingress</div>
-        <textarea class="i2r-input" spellcheck="false" placeholder="Colle ici le YAML ou le JSON de l'Ingress (ex. kubectl get ingress <nom> -o yaml)"></textarea>
+        <textarea class="i2r-input" spellcheck="false" placeholder="Colle ici le YAML de l'Ingress (ex. kubectl get ingress <nom> -o yaml)"></textarea>
         <div class="i2r-row">
           <button class="i2r-btn i2r-primary i2r-analyze">Analyser</button>
           <button class="i2r-btn i2r-clear">Effacer</button>
@@ -28,7 +24,7 @@
           <button class="i2r-btn i2r-ex" data-ex="reencrypt">reencrypt</button>
           <button class="i2r-btn i2r-ex" data-ex="passthrough">passthrough</button>
           <button class="i2r-btn i2r-ex" data-ex="edge">edge (erreur)</button>
-          <button class="i2r-btn i2r-ex" data-ex="conflict">passthrough + L7</button>
+          <button class="i2r-btn i2r-ex" data-ex="porthint">port name: https</button>
         </div>
       </div>
 
@@ -59,6 +55,9 @@
   #i2r-app .i2r-head{border-bottom:1px solid var(--line);padding-bottom:14px;margin-bottom:16px}
   #i2r-app .i2r-head h3{font-size:19px;margin:0 0 4px;color:var(--ink);font-weight:700}
   #i2r-app .i2r-head p{margin:0;color:var(--ink-soft);font-size:13px}
+  #i2r-app .i2r-notice{display:flex;gap:10px;align-items:flex-start;background:#fff8ee;border:1px solid #f5d9b0;border-left:4px solid var(--amber);border-radius:8px;padding:10px 13px;margin-bottom:16px;font-size:12.5px;color:#7a4a00;line-height:1.5}
+  #i2r-app .i2r-notice-ico{font-size:15px;line-height:1.3;flex-shrink:0}
+  #i2r-app .i2r-notice b{color:var(--amber)}
   #i2r-app .i2r-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
   @media(max-width:860px){#i2r-app .i2r-grid{grid-template-columns:1fr}}
   #i2r-app .i2r-card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px}
@@ -112,7 +111,7 @@
       root.setAttribute('data-init','1');
       var $ = function(s){ return root.querySelector(s); };
 
-      /* ---------- Mini-parser YAML (sous-ensemble manifests K8s) + JSON ---------- */
+      /* ---------- Mini-parser YAML (sous-ensemble manifests K8s) ---------- */
       function stripComment(line){var inS=false,inD=false,out='';for(var i=0;i<line.length;i++){var c=line[i];if(c==="'"&&!inD)inS=!inS;else if(c==='"'&&!inS)inD=!inD;if(c==='#'&&!inS&&!inD&&(i===0||/\s/.test(line[i-1])))break;out+=c;}return out;}
       function findColon(s){var inS=false,inD=false;for(var i=0;i<s.length;i++){var c=s[i];if(c==="'"&&!inD)inS=!inS;else if(c==='"'&&!inS)inD=!inD;if(c===':'&&!inS&&!inD&&(i+1>=s.length||s[i+1]===' '))return i;}return s.indexOf(':');}
       function unq(v){v=v.trim();if((v[0]==='"'&&v.slice(-1)==='"')||(v[0]==="'"&&v.slice(-1)==="'"))return v.slice(1,-1);return v;}
@@ -138,9 +137,8 @@
       }
       function parseInput(text){
         text=text.trim();
-        if(!text)throw new Error("Entree vide : colle un Ingress YAML ou JSON.");
-        try{return JSON.parse(text);}catch(e){}
-        try{return parseYAML(text);}catch(e2){throw new Error("Impossible de parser l'entree (YAML/JSON). "+e2.message);}
+        if(!text)throw new Error("Entree vide : colle un Ingress au format YAML.");
+        try{return parseYAML(text);}catch(e){throw new Error("Impossible de parser le YAML. "+e.message);}
       }
 
       /* ---------- Exemples ---------- */
@@ -148,7 +146,7 @@
         reencrypt:"apiVersion: networking.k8s.io/v1\nkind: Ingress\nmetadata:\n  name: ap26330-api-contract\n  annotations:\n    nginx.ingress.kubernetes.io/ssl-passthrough: \"false\"\n    nginx.ingress.kubernetes.io/backend-protocol: \"HTTPS\"\n    nginx.ingress.kubernetes.io/affinity: \"cookie\"\n    nginx.ingress.kubernetes.io/session-cookie-name: \"nts-cookie\"\n    nginx.ingress.kubernetes.io/rewrite-target: /\n    nginx.ingress.kubernetes.io/proxy-read-timeout: \"30\"\n    nginx.ingress.kubernetes.io/ssl-redirect: \"true\"\nspec:\n  tls:\n    - hosts: [api-contract.example.com]\n      secretName: api-contract-tls\n  rules:\n    - host: api-contract.example.com\n      http:\n        paths:\n          - path: /api/contract\n            pathType: Prefix\n            backend:\n              service:\n                name: api-contract\n                port:\n                  number: 8443",
         passthrough:"apiVersion: networking.k8s.io/v1\nkind: Ingress\nmetadata:\n  name: ap26307-front-mtls\n  annotations:\n    nginx.ingress.kubernetes.io/ssl-passthrough: \"true\"\n    nginx.ingress.kubernetes.io/backend-protocol: \"HTTPS\"\nspec:\n  rules:\n    - host: front-mtls.example.com\n      http:\n        paths:\n          - path: /\n            pathType: Prefix\n            backend:\n              service:\n                name: front-mtls\n                port:\n                  number: 8443",
         edge:"apiVersion: networking.k8s.io/v1\nkind: Ingress\nmetadata:\n  name: ap26330-api-legacy\n  annotations:\n    nginx.ingress.kubernetes.io/ssl-passthrough: \"false\"\n    nginx.ingress.kubernetes.io/backend-protocol: \"HTTP\"\n    nginx.ingress.kubernetes.io/rewrite-target: /\nspec:\n  tls:\n    - hosts: [api-legacy.example.com]\n      secretName: api-legacy-tls\n  rules:\n    - host: api-legacy.example.com\n      http:\n        paths:\n          - path: /api/legacy\n            pathType: Prefix\n            backend:\n              service:\n                name: api-legacy\n                port:\n                  number: 8080",
-        conflict:"apiVersion: networking.k8s.io/v1\nkind: Ingress\nmetadata:\n  name: ap26330-api-mix\n  annotations:\n    nginx.ingress.kubernetes.io/ssl-passthrough: \"true\"\n    nginx.ingress.kubernetes.io/affinity: \"cookie\"\n    nginx.ingress.kubernetes.io/session-cookie-name: \"nts-cookie\"\nspec:\n  rules:\n    - host: api-mix.example.com\n      http:\n        paths:\n          - path: /a\n            pathType: Prefix\n            backend:\n              service: { name: svc-a, port: { number: 8443 } }\n          - path: /b\n            pathType: Prefix\n            backend:\n              service: { name: svc-b, port: { number: 8443 } }"
+        porthint:"apiVersion: networking.k8s.io/v1\nkind: Ingress\nmetadata:\n  name: spi-frontend-ingress\n  namespace: ns002i014892\n  labels:\n    app: spi-frontend\n  annotations:\n    com.illumio.app: A_AP25688-SPI_0-DEFAULT\nspec:\n  tls:\n    - hosts: [spi-wal-uat1-bp2s.staging.echonet]\n      secretName: spi-frontend-tls\n  rules:\n    - host: spi-wal-uat1-bp2s.staging.echonet\n      http:\n        paths:\n          - path: /\n            pathType: Prefix\n            backend:\n              service:\n                name: spi-frontend-service\n                port:\n                  name: https"
       };
 
       /* ---------- Analyse ---------- */
@@ -156,6 +154,41 @@
       function getAnn(a,key){var v=a['nginx.ingress.kubernetes.io/'+key];return(v!==undefined)?v:a['ingress.kubernetes.io/'+key];}
       function allPaths(obj){var out=[];((obj.spec&&obj.spec.rules)||[]).forEach(function(r){((r.http&&r.http.paths)||[]).forEach(function(p){out.push(p);});});return out;}
       function uniq(arr){var s={},o=[];arr.forEach(function(x){if(!s[x]){s[x]=1;o.push(x);}});return o;}
+      function listOtherAnnotations(a){
+        /* Toute annotation nginx.ingress.kubernetes.io/* (ou ingress.kubernetes.io/*) autre que
+           ssl-passthrough : selon la doc officielle nginx-ingress, le passthrough opere en
+           couche 4 (TCP) et invalide TOUTES les autres annotations - pas seulement les fonctions L7 connues. */
+        var out=[];
+        for(var k in a){
+          if(!Object.prototype.hasOwnProperty.call(a,k))continue;
+          var m=/^(?:nginx\.ingress\.kubernetes\.io|ingress\.kubernetes\.io)\/(.+)$/.exec(k);
+          if(!m)continue;
+          if(m[1]==='ssl-passthrough')continue;
+          out.push(m[1]);
+        }
+        return uniq(out);
+      }
+      function backendTLSHint(obj){
+        /* Deduit un backend TLS depuis le port du Service quand backend-protocol est absent.
+           On inspecte a la fois port.name et port.number, sans presumer du type de chacun :
+           en pratique, des manifestes non conformes au schema placent parfois une valeur
+           textuelle ("https") dans le champ number. On tolere ce cas plutot que de le rejeter. */
+        var paths=allPaths(obj);
+        for(var i=0;i<paths.length;i++){
+          var svc=(paths[i].backend&&paths[i].backend.service)||{};
+          var port=svc.port||{};
+          var candidates=[port.name,port.number];
+          for(var c=0;c<candidates.length;c++){
+            var v=candidates[c];
+            if(v===undefined||v===null||v==='')continue;
+            var vs=String(v).toLowerCase();
+            if(vs==='https'||vs==='tls'||vs.indexOf('https')>=0)return {hit:true,source:'port "'+v+'"'};
+            var n=parseInt(vs,10);
+            if(!isNaN(n)&&(n===443||n===8443))return {hit:true,source:'port '+n};
+          }
+        }
+        return {hit:false,source:null};
+      }
       function detectL7(a,obj){var f=[];
         if(getAnn(a,'affinity'))f.push('Sticky session (cookie)');
         if(getAnn(a,'session-cookie-name')||getAnn(a,'session-cookie-expires')||getAnn(a,'session-cookie-max-age')||getAnn(a,'affinity-mode'))f.push('Cookie de session');
@@ -175,18 +208,37 @@
         if(!obj||(obj.kind&&String(obj.kind).toLowerCase()!=='ingress'))throw new Error("L'objet n'est pas un Ingress (kind attendu : Ingress).");
         var a=ann(obj);
         var passthrough=String(getAnn(a,'ssl-passthrough')).toLowerCase()==='true';
-        var backendProto=String(getAnn(a,'backend-protocol')||'HTTP').toUpperCase();
-        var backendHTTPS=backendProto==='HTTPS';
+        var backendProtoAnn=getAnn(a,'backend-protocol');
+        var portHint=backendTLSHint(obj);
+        var backendHTTPS = backendProtoAnn ? String(backendProtoAnn).toUpperCase()==='HTTPS' : portHint.hit;
+        var backendProto = backendProtoAnn
+          ? String(backendProtoAnn).toUpperCase()
+          : (portHint.hit ? 'HTTPS (deduit du '+portHint.source+')' : 'HTTP (par defaut, aucun indice TLS)');
         var l7=detectL7(a,obj);
+        var otherAnn=listOtherAnnotations(a);
         var verdict,why,conflict=false;
         if(passthrough){
-          if(l7.length){verdict='reencrypt';conflict=true;why="ssl-passthrough=true mais des fonctions L7 necessitent que le routeur voie le HTTP -> bascule en reencrypt (le backend termine deja le TLS).";}
-          else{verdict='passthrough';why="ssl-passthrough=true et aucune fonction L7 : l'application termine le TLS, le routeur ne dechiffre pas.";}
+          verdict='passthrough';
+          if(l7.length){
+            conflict=true;
+            why="ssl-passthrough=true : le routeur ne dechiffre pas (couche 4 / TCP), donc traduction fidele en passthrough. Attention : "+l7.join(', ')+" sont presentes sur l'Ingress ; d'apres la doc nginx-ingress, elles sont deja invalidees cote source des lors que le passthrough est actif, donc probablement deja non fonctionnelles aujourd'hui. Si l'equipe applicative attend reellement ce comportement, c'est un changement volontaire vers reencrypt a valider avec elle - pas un effet automatique de la migration.";
+          } else if(otherAnn.length){
+            why="ssl-passthrough=true : l'application termine le TLS, le routeur ne dechiffre pas (couche 4 / TCP). D'autres annotations nginx sont presentes ("+otherAnn.join(', ')+") mais ne portent pas de fonctionnalite L7 identifiee ; d'apres la doc nginx-ingress, elles sont de toute facon deja inertes cote source.";
+          } else {
+            why="ssl-passthrough=true et aucune autre annotation : l'application termine le TLS, le routeur ne dechiffre pas (passthrough = couche 4 / TCP).";
+          }
         } else {
-          if(backendHTTPS){verdict='reencrypt';why="Le routeur termine le TLS ; le backend sert du TLS (backend-protocol=HTTPS) -> reencrypt.";}
-          else{verdict='edge';why="Le routeur termine le TLS et le backend est en clair (backend-protocol="+backendProto+") -> edge.";}
+          if(backendHTTPS){
+            verdict='reencrypt';
+            why = backendProtoAnn
+              ? "Le routeur termine le TLS ; le backend sert du TLS (backend-protocol=HTTPS) -> reencrypt."
+              : "ssl-passthrough absent (desactive par defaut selon la doc nginx-ingress) ; le "+portHint.source+" du Service indique un backend TLS -> reencrypt.";
+          } else {
+            verdict='edge';
+            why="Le routeur termine le TLS et le backend est en clair (backend-protocol="+backendProto+") -> edge.";
+          }
         }
-        return {verdict:verdict,why:why,conflict:conflict,passthrough:passthrough,backendProto:backendProto,l7:l7,a:a,obj:obj};
+        return {verdict:verdict,why:why,conflict:conflict,passthrough:passthrough,backendProto:backendProto,otherAnn:otherAnn,l7:l7,a:a,obj:obj};
       }
 
       /* ---------- Generation de Route ---------- */
@@ -241,14 +293,16 @@
         var cls='i2r-v-'+r.verdict,label=r.verdict.toUpperCase();
         var subMap={passthrough:'TLS termine au pod',reencrypt:'Routeur termine puis re-chiffre vers le backend',edge:'Routeur termine, backend en clair'};
         var html='';
-        html+='<div class="i2r-verdict '+cls+'"><span class="i2r-badge">'+label+'</span><div class="i2r-sub"><b>'+subMap[r.verdict]+'</b><span class="i2r-muted">'+r.why+'</span></div></div>';
+        html+='<div class="i2r-verdict '+cls+'"><span class="i2r-badge">'+label+'</span><div class="i2r-sub"><b>'+subMap[r.verdict]+'</b>'+(r.conflict?'':'<span class="i2r-muted">'+r.why+'</span>')+'</div></div>';
         html+='<div class="i2r-tlspath">'+tlsDiagram(r.verdict)+'</div>';
         if(r.verdict==='edge'){html+='<div class="i2r-err"><b>&#9940; EDGE interdit.</b> Le chiffrement pod-to-pod est obligatoire : aucun trafic en clair vers le pod. Le backend est en clair (<code>backend-protocol='+r.backendProto+'</code>). <b>Action :</b> faire servir le TLS par le backend (ex. sidecar nginx) puis passer la Route en <code>reencrypt</code>. La Route ci-dessous est la version conforme proposee.</div>';}
-        if(r.conflict){html+='<div class="i2r-err" style="border-left-color:var(--amber);background:#fff8ee;color:#7a4a00"><b style="color:var(--amber)">&#9888; Incoherence.</b> <code>ssl-passthrough=true</code> est declare mais des fonctions L7 sont presentes (elles ne fonctionnent pas en passthrough). Traduction en <code>reencrypt</code>.</div>';}
+        if(r.conflict){html+='<div class="i2r-err" style="border-left-color:var(--amber);background:#fff8ee;color:#7a4a00"><b style="color:var(--amber)">&#9888; A verifier.</b> '+r.why+'</div>';}
         html+='<div class="i2r-reason">';
         html+='<div class="i2r-kv"><span>ssl-passthrough</span><code>'+r.passthrough+'</code></div>';
         html+='<div class="i2r-kv"><span>backend-protocol</span><code>'+r.backendProto+'</code></div>';
-        html+='<div class="i2r-kv"><span>Fonctions L7 detectees</span><code>'+r.l7.length+'</code></div>';
+        html+='<div class="i2r-kv"><span>Autres annotations nginx presentes</span><code>'+r.otherAnn.length+'</code></div>';
+        if(r.otherAnn.length){html+='<div class="i2r-chips">'+r.otherAnn.map(function(x){return '<span class="i2r-chip">'+x+'</span>';}).join('')+'</div>';}
+        html+='<div class="i2r-kv"><span>Fonctions L7 reconnues</span><code>'+r.l7.length+'</code></div>';
         if(r.l7.length){html+='<div class="i2r-chips">'+r.l7.map(function(x){return '<span class="i2r-chip">'+x+'</span>';}).join('')+'</div>';}
         html+='</div>';
         var routeText=buildRoute(r);
