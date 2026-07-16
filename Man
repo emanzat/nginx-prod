@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cloud Usage Position — Outil d'aide à la décision</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0e1a;
+    --surface: #111827;
+    --surface2: #1a2235;
+    --border: #1e2d45;
+    --text: #e2e8f0;
+    --text-muted: #64748b;
+    --green: #22c55e;
+    --green-special: #86efac;
+    --red: #ef4444;
+    --amber: #f59e0b;
+    --blue: #3b82f6;
+    --cxs1: #22c55e;
+    --cxs2: #84cc16;
+    --cxs3: #f59e0b;
+    --cxs4: #ef4444;
+    --accent: #06b6d4;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'IBM Plex Sans', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(6,182,212,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(6,182,212,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 24px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* HEADER */
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 32px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .header-left h1 {
+    font-size: 1.6rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--text);
+  }
+
+  .header-left h1 span {
+    color: var(--accent);
+  }
+
+  .header-left p {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-top: 4px;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  .badge {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 8px 16px;
+    font-size: 0.75rem;
+    font-family: 'IBM Plex Mono', monospace;
+    color: var(--accent);
+  }
+
+  /* MAIN LAYOUT */
+  .main-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+  }
+
+  .panel-title {
+    font-size: 0.7rem;
+    font-family: 'IBM Plex Mono', monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--accent);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .panel-title::before {
+    content: '';
+    width: 3px;
+    height: 12px;
+    background: var(--accent);
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+
+  /* STEP 1 — MATRIX */
+  .matrix-section label {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  .select-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  select {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    padding: 10px 14px;
+    font-size: 0.85rem;
+    font-family: 'IBM Plex Sans', sans-serif;
+    appearance: none;
+    cursor: pointer;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  select:focus { border-color: var(--accent); }
+
+  .cxs-result {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .cxs-result .label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  .cxs-badge {
+    font-size: 1.1rem;
+    font-weight: 700;
+    font-family: 'IBM Plex Mono', monospace;
+    padding: 4px 14px;
+    border-radius: 6px;
+    transition: all 0.3s;
+  }
+
+  .cxs-badge.cxs1 { color: var(--cxs1); background: rgba(34,197,94,0.12); border: 1px solid rgba(34,197,94,0.3); }
+  .cxs-badge.cxs2 { color: var(--cxs2); background: rgba(132,204,22,0.12); border: 1px solid rgba(132,204,22,0.3); }
+  .cxs-badge.cxs3 { color: var(--cxs3); background: rgba(245,158,11,0.12); border: 1px solid rgba(245,158,11,0.3); }
+  .cxs-badge.cxs4 { color: var(--cxs4); background: rgba(239,68,68,0.12); border: 1px solid rgba(239,68,68,0.3); }
+  .cxs-badge.none { color: var(--text-muted); background: transparent; border: 1px solid var(--border); }
+
+  /* MATRIX TABLE */
+  .matrix-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 16px;
+    font-size: 0.75rem;
+  }
+
+  .matrix-table th {
+    background: var(--surface2);
+    padding: 8px 10px;
+    text-align: center;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+  }
+
+  .matrix-table td {
+    padding: 8px 10px;
+    text-align: center;
+    border: 1px solid var(--border);
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 600;
+    font-size: 0.7rem;
+    transition: all 0.2s;
+  }
+
+  .matrix-table td.active-cell {
+    box-shadow: inset 0 0 0 2px var(--accent);
+    transform: scale(1.05);
+    z-index: 2;
+    position: relative;
+  }
+
+  .cell-cxs1 { color: var(--cxs1); background: rgba(34,197,94,0.08); }
+  .cell-cxs2 { color: var(--cxs2); background: rgba(132,204,22,0.08); }
+  .cell-cxs3 { color: var(--cxs3); background: rgba(245,158,11,0.08); }
+  .cell-cxs4 { color: var(--cxs4); background: rgba(239,68,68,0.08); }
+
+  .row-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    background: var(--surface2) !important;
+    text-align: left !important;
+    padding-left: 10px !important;
+  }
+
+  /* STEP 2 — CLOUD TYPE SELECTION */
+  .cloud-types-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .cloud-type-btn {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: left;
+    color: var(--text);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .cloud-type-btn:hover { border-color: var(--accent); }
+  .cloud-type-btn.selected { border-color: var(--accent); background: rgba(6,182,212,0.08); }
+
+  .cloud-type-btn .type-name {
+    font-weight: 600;
+    font-size: 0.85rem;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  .cloud-type-btn .type-desc {
+    font-size: 0.68rem;
+    color: var(--text-muted);
+    line-height: 1.3;
+  }
+
+  /* RESULT PANEL */
+  .result-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 16px;
+  }
+
+  .result-status {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+
+  .status-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    flex-shrink: 0;
+    transition: all 0.3s;
+  }
+
+  .status-icon.green { background: rgba(34,197,94,0.15); border: 1px solid rgba(34,197,94,0.3); }
+  .status-icon.green-special { background: rgba(134,239,172,0.15); border: 1px solid rgba(134,239,172,0.3); }
+  .status-icon.red { background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3); }
+  .status-icon.pending { background: var(--surface2); border: 1px solid var(--border); }
+
+  .status-info h2 {
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+
+  .status-info h2.green { color: var(--green); }
+  .status-info h2.green-special { color: var(--green-special); }
+  .status-info h2.red { color: var(--red); }
+  .status-info h2.pending { color: var(--text-muted); }
+
+  .status-info p {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+  }
+
+  /* COMPLIANCE TABLE */
+  .compliance-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 16px;
+  }
+
+  .compliance-table th {
+    background: var(--surface2);
+    padding: 8px 12px;
+    font-size: 0.65rem;
+    font-family: 'IBM Plex Mono', monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+    text-align: center;
+  }
+
+  .compliance-table td {
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    font-size: 0.78rem;
+    vertical-align: middle;
+  }
+
+  .compliance-table td:first-child {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    background: var(--surface2);
+    text-align: center;
+  }
+
+  .compliance-table .highlight-row td {
+    background: rgba(6,182,212,0.05);
+  }
+
+  .dot {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    margin: auto;
+  }
+
+  .dot.green { background: rgba(34,197,94,0.15); color: var(--green); }
+  .dot.green-special { background: rgba(134,239,172,0.15); color: var(--green-special); }
+  .dot.red { background: rgba(239,68,68,0.15); color: var(--red); }
+
+  /* DECISION CHECKLIST */
+  .checklist {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .check-item {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .check-label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    font-family: 'IBM Plex Mono', monospace;
+    margin-bottom: 2px;
+  }
+
+  .check-val {
+    font-size: 0.82rem;
+    color: var(--text);
+  }
+
+  .check-alpha {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.65rem;
+    font-family: 'IBM Plex Mono', monospace;
+    color: var(--accent);
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  /* BNPP EXAMPLES */
+  .examples-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+    margin-top: 16px;
+  }
+
+  .example-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px;
+    text-align: center;
+    transition: all 0.2s;
+  }
+
+  .example-card.active { border-color: var(--accent); background: rgba(6,182,212,0.08); }
+
+  .example-type {
+    font-size: 0.65rem;
+    font-family: 'IBM Plex Mono', monospace;
+    color: var(--accent);
+    margin-bottom: 4px;
+  }
+
+  .example-name {
+    font-size: 0.72rem;
+    color: var(--text);
+    line-height: 1.3;
+  }
+
+  /* RESET BTN */
+  .reset-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text-muted);
+    padding: 8px 16px;
+    font-size: 0.75rem;
+    font-family: 'IBM Plex Mono', monospace;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-top: 12px;
+  }
+
+  .reset-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* ANIMATIONS */
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .animate { animation: fadeIn 0.3s ease forwards; }
+
+  .bottom-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  .full-width { grid-column: 1 / -1; }
+
+  .td-center { text-align: center; }
+
+  .step-indicator {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+
+  .step {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  .step-num {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.65rem;
+    color: var(--text-muted);
+  }
+
+  .step.active .step-num {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--bg);
+  }
+
+  .step.active { color: var(--accent); }
+
+  .step-sep { color: var(--border); }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- HEADER -->
+  <header>
+    <div class="header-left">
+      <h1>Cloud <span>Usage Position</span> — Decision Tool</h1>
+      <p>BNPP Cloud Referral Card v3.2b · Outil d'aide à la décision</p>
+    </div>
+    <div class="badge">CXS Framework v3.2</div>
+  </header>
+
+  <!-- STEPS -->
+  <div class="step-indicator">
+    <div class="step active" id="step1-ind"><div class="step-num">1</div> Competitive & Confidentiality</div>
+    <div class="step-sep">›</div>
+    <div class="step" id="step2-ind"><div class="step-num">2</div> Cloud Type</div>
+    <div class="step-sep">›</div>
+    <div class="step" id="step3-ind"><div class="step-num">3</div> Décision</div>
+  </div>
+
+  <!-- ROW 1 -->
+  <div class="main-grid" style="margin-bottom:16px">
+
+    <!-- PANEL 1: MATRIX INPUTS -->
+    <div class="panel">
+      <div class="panel-title">Étape 1 — Cloud Decision Matrix</div>
+
+      <div class="select-row">
+        <div>
+          <label>Competitive Level</label>
+          <select id="compLevel" onchange="compute()">
+            <option value="">— Sélectionner —</option>
+            <option value="1">Level 1</option>
+            <option value="2">Level 2</option>
+            <option value="3">Level 3</option>
+            <option value="4">Level 4</option>
+          </select>
+        </div>
+        <div>
+          <label>Confidentiality Level</label>
+          <select id="confLevel" onchange="compute()">
+            <option value="">— Sélectionner —</option>
+            <option value="public">Public</option>
+            <option value="internal">Internal</option>
+            <option value="confid">Confidential</option>
+            <option value="secret">Secret</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="cxs-result">
+        <div class="label">CXS Level calculé</div>
+        <div class="cxs-badge none" id="cxsResult">—</div>
+      </div>
+
+      <!-- Matrix visual -->
+      <table class="matrix-table" style="margin-top:14px">
+        <thead>
+          <tr>
+            <th>Level</th>
+            <th>Public</th>
+            <th>Internal</th>
+            <th>Confid.</th>
+            <th>Secret</th>
+          </tr>
+        </thead>
+        <tbody id="matrixBody">
+          <tr>
+            <td class="row-label">Lvl 4</td>
+            <td class="cell-cxs3" data-r="4" data-c="public">CXS 3</td>
+            <td class="cell-cxs3" data-r="4" data-c="internal">CXS 3</td>
+            <td class="cell-cxs4" data-r="4" data-c="confid">CXS 4</td>
+            <td class="cell-cxs4" data-r="4" data-c="secret">CXS 4</td>
+          </tr>
+          <tr>
+            <td class="row-label">Lvl 3</td>
+            <td class="cell-cxs2" data-r="3" data-c="public">CXS 2</td>
+            <td class="cell-cxs2" data-r="3" data-c="internal">CXS 2</td>
+            <td class="cell-cxs3" data-r="3" data-c="confid">CXS 3</td>
+            <td class="cell-cxs4" data-r="3" data-c="secret">CXS 4</td>
+          </tr>
+          <tr>
+            <td class="row-label">Lvl 2</td>
+            <td class="cell-cxs1" data-r="2" data-c="public">CXS 1</td>
+            <td class="cell-cxs1" data-r="2" data-c="internal">CXS 1</td>
+            <td class="cell-cxs2" data-r="2" data-c="confid">CXS 2</td>
+            <td class="cell-cxs4" data-r="2" data-c="secret">CXS 4</td>
+          </tr>
+          <tr>
+            <td class="row-label">Lvl 1</td>
+            <td class="cell-cxs1" data-r="1" data-c="public">CXS 1</td>
+            <td class="cell-cxs1" data-r="1" data-c="internal">CXS 1</td>
+            <td class="cell-cxs2" data-r="1" data-c="confid">CXS 2</td>
+            <td class="cell-cxs4" data-r="1" data-c="secret">CXS 4</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- PANEL 2: CLOUD TYPE -->
+    <div class="panel">
+      <div class="panel-title">Étape 2 — Sélectionner le Cloud Type</div>
+      <div class="cloud-types-grid" id="cloudTypesGrid" style="grid-template-columns:1fr 1fr;gap:8px">
+
+        <button class="cloud-type-btn" data-type="1" onclick="selectType(this)" style="grid-column:1/-1">
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <div class="type-name">Type 1 — Legacy Cloud / IT on-prem</div>
+            <div style="font-size:0.6rem;font-family:'IBM Plex Mono',monospace;color:var(--text-muted);background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:2px 7px">Priorité 3</div>
+          </div>
+          <div class="type-desc">IT Cloud / IV2 / IT on-premises · Cloud legacy et infrastructure interne</div>
+        </button>
+
+        <button class="cloud-type-btn" data-type="2" onclick="selectType(this)">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px">
+            <div class="type-name">Type 2</div>
+            <div style="font-size:0.6rem;font-family:'IBM Plex Mono',monospace;color:var(--accent);background:rgba(6,182,212,0.1);border:1px solid rgba(6,182,212,0.3);border-radius:4px;padding:2px 7px">Priorité 1</div>
+          </div>
+          <div class="type-desc">Dedicated Cloud [dMZR] · Priorité maximale</div>
+        </button>
+
+        <button class="cloud-type-btn" data-type="3" onclick="selectType(this)">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px">
+            <div class="type-name">Type 3</div>
+            <div style="font-size:0.6rem;font-family:'IBM Plex Mono',monospace;color:var(--text-muted);background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:2px 7px">Priorité 2</div>
+          </div>
+          <div class="type-desc">IBM for Financial Services</div>
+        </button>
+
+        <button class="cloud-type-btn" data-type="4" onclick="selectType(this)">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px">
+            <div class="type-name">Type 4</div>
+            <div style="font-size:0.6rem;font-family:'IBM Plex Mono',monospace;color:var(--text-muted);background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:2px 7px">Priorité 4</div>
+          </div>
+          <div class="type-desc">Azure Landing Zone / CSP VPC</div>
+        </button>
+
+        <button class="cloud-type-btn" data-type="5" onclick="selectType(this)">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px">
+            <div class="type-name">Type 5</div>
+            <div style="font-size:0.6rem;font-family:'IBM Plex Mono',monospace;color:var(--text-muted);background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:2px 7px">Priorité 5</div>
+          </div>
+          <div class="type-desc">Azure BNPP tenant / CSP Public Cloud</div>
+        </button>
+
+      </div>
+
+      <!-- Legend -->
+      <div style="margin-top:16px; padding-top:14px; border-top:1px solid var(--border)">
+        <div style="font-size:0.65rem; font-family:'IBM Plex Mono',monospace; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase; letter-spacing:.08em">Légende conformité</div>
+        <div style="display:flex; flex-direction:column; gap:6px">
+          <div style="display:flex; align-items:center; gap:10px; font-size:0.75rem; color:var(--text-muted)">
+            <span style="color:var(--green); font-size:1rem">✓</span>
+            <span><strong style="color:var(--green)">GREEN</strong> — Aligné Cloud Blueprint (Rule 0 requise)</span>
+          </div>
+          <div style="display:flex; align-items:center; gap:10px; font-size:0.75rem; color:var(--text-muted)">
+            <span style="color:var(--green-special); font-size:1rem">!</span>
+            <span><strong style="color:var(--green-special)">GREEN Special</strong> — Décision locale, attention Risk Assessment</span>
+          </div>
+          <div style="display:flex; align-items:center; gap:10px; font-size:0.75rem; color:var(--text-muted)">
+            <span style="color:var(--red); font-size:1rem">✕</span>
+            <span><strong style="color:var(--red)">RED</strong> — Interdit · Escalade CMAT / Group CIO obligatoire</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RESULT PANEL -->
+  <div class="result-panel" id="resultPanel">
+    <div class="panel-title">Étape 3 — Résultat & Décision</div>
+
+    <div class="result-status">
+      <div class="status-icon pending" id="statusIcon">❓</div>
+      <div class="status-info">
+        <h2 class="pending" id="statusTitle">En attente de saisie</h2>
+        <p id="statusDesc">Sélectionnez le Competitive Level, le Confidentiality Level et le Cloud Type pour obtenir une décision.</p>
+      </div>
+    </div>
+
+    <!-- FULL COMPLIANCE TABLE -->
+    <div style="margin-bottom:16px">
+      <div style="font-size:0.65rem; font-family:'IBM Plex Mono',monospace; color:var(--text-muted); margin-bottom:10px; text-transform:uppercase; letter-spacing:.08em">Matrice complète de conformité</div>
+      <table class="compliance-table">
+        <thead>
+          <tr>
+            <th>Cloud Type</th>
+            <th>Priorité</th>
+            <th>CXS 1</th>
+            <th>CXS 2</th>
+            <th>CXS 3</th>
+            <th>CXS 4</th>
+            <th>Exemple BNPP</th>
+          </tr>
+        </thead>
+        <tbody id="complianceBody">
+          <!-- filled by JS -->
+        </tbody>
+      </table>
+    </div>
+
+    <!-- DECISION CHECKLIST -->
+    <div>
+      <div style="font-size:0.65rem; font-family:'IBM Plex Mono',monospace; color:var(--text-muted); margin-bottom:10px; text-transform:uppercase; letter-spacing:.08em">Entity Cloud Representative — Questions de décision</div>
+      <div class="checklist">
+        <div class="check-item">
+          <div class="check-alpha">a</div>
+          <div>
+            <div class="check-label">Cloud Position Validation</div>
+            <div class="check-val">La Cloud Position est-elle validée par le Cloud Leader ?</div>
+          </div>
+        </div>
+        <div class="check-item">
+          <div class="check-alpha">b</div>
+          <div>
+            <div class="check-label">Risk Assessment</div>
+            <div class="check-val">Un Risk Assessment est-il disponible ?</div>
+          </div>
+        </div>
+        <div class="check-item">
+          <div class="check-alpha">c</div>
+          <div>
+            <div class="check-label">Residual Risk Level</div>
+            <div class="check-val">Quel est le niveau de risque résiduel cible ?</div>
+          </div>
+        </div>
+        <div class="check-item" id="checkD" style="grid-column:1/-1">
+          <div class="check-alpha">d</div>
+          <div>
+            <div class="check-label">Dérogation Groupe</div>
+            <div class="check-val" id="checkDVal">Si <strong style="color:var(--red)">RED</strong> : votre Entité avec le Pôle supporte-t-elle la demande de dérogation auprès du Groupe (CMAT / Group CIO) ?</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BNPP IMPLEMENTATIONS -->
+  <div class="panel">
+    <div class="panel-title">Implémentations BNPP (non-limitatif)</div>
+    <div class="examples-grid" id="examplesGrid">
+      <div class="example-card" data-type="2">
+        <div class="example-type">Type 2</div>
+        <div class="example-name">Dedicated Cloud [dMZR]</div>
+      </div>
+      <div class="example-card" data-type="3">
+        <div class="example-type">Type 3</div>
+        <div class="example-name">IBM for FS</div>
+      </div>
+      <div class="example-card" data-type="1">
+        <div class="example-type">Type 1</div>
+        <div class="example-name">IT Cloud / IV2 / IT on-prem</div>
+      </div>
+      <div class="example-card" data-type="4">
+        <div class="example-type">Type 4</div>
+        <div class="example-name">Azure Landing Zone / CSP VPC</div>
+      </div>
+      <div class="example-card" data-type="5">
+        <div class="example-type">Type 5</div>
+        <div class="example-name">Azure BNPP tenant / CSP Public Cloud</div>
+      </div>
+    </div>
+    <button class="reset-btn" onclick="reset()">↺ Réinitialiser</button>
+  </div>
+
+</div>
+
+<script>
+// DATA
+const matrix = {
+  1: { public: 1, internal: 1, confid: 2, secret: 4 },
+  2: { public: 1, internal: 1, confid: 2, secret: 4 },
+  3: { public: 2, internal: 2, confid: 3, secret: 4 },
+  4: { public: 3, internal: 3, confid: 4, secret: 4 }
+};
+
+// compliance[type][cxs] = 'green' | 'green-special' | 'red'
+const compliance = {
+  2: { 1: 'green', 2: 'green', 3: 'green', 4: 'green-special' },
+  3: { 1: 'green', 2: 'green-special', 3: 'green-special', 4: 'red' },
+  1: { 1: 'green', 2: 'green', 3: 'green', 4: 'green-special' },
+  4: { 1: 'green', 2: 'green-special', 3: 'red', 4: 'red' },
+  5: { 1: 'green', 2: 'red', 3: 'red', 4: 'red' }
+};
+
+const typeInfo = {
+  1: { label: 'Type 1 — Legacy / IT on-prem', priority: '3ème', example: 'IT Cloud / IV2 / IT on-prem' },
+  2: { label: 'Type 2', priority: '1er', example: 'Dedicated Cloud [dMZR]' },
+  3: { label: 'Type 3', priority: '2ème', example: 'IBM for FS' },
+  4: { label: 'Type 4', priority: '4ème', example: 'Azure Landing Zone / CSP VPC' },
+  5: { label: 'Type 5', priority: '5ème', example: 'Azure BNPP tenant / CSP Public' }
+};
+
+const typeOrder = [2, 3, 1, 4, 5];
+
+let selectedType = null;
+
+function dotHTML(status) {
+  if (!status) return '<div class="dot" style="color:var(--text-muted)">—</div>';
+  const icons = { green: '✓', 'green-special': '!', red: '✕' };
+  return `<div class="dot ${status}" style="display:flex;margin:auto">${icons[status]}</div>`;
+}
+
+function buildComplianceTable(currentCXS, currentType) {
+  const tbody = document.getElementById('complianceBody');
+  let html = '';
+  for (const t of typeOrder) {
+    const info = typeInfo[t];
+    const isHighlight = currentType && parseInt(currentType) === t;
+    html += `<tr class="${isHighlight ? 'highlight-row' : ''}">`;
+    html += `<td style="font-family:'IBM Plex Mono',monospace;font-size:0.72rem;background:var(--surface2);padding:10px 12px">${info.label}</td>`;
+    html += `<td class="td-center" style="font-size:0.68rem;color:var(--text-muted);font-family:'IBM Plex Mono',monospace">${info.priority}</td>`;
+    for (let cxs = 1; cxs <= 4; cxs++) {
+      const status = compliance[t][cxs];
+      const isCurrent = currentCXS === cxs && isHighlight;
+      html += `<td class="td-center" style="${isCurrent ? 'box-shadow:inset 0 0 0 2px var(--accent);' : ''}">${dotHTML(status)}</td>`;
+    }
+    html += `<td style="font-size:0.72rem;color:var(--text-muted)">${info.example}</td>`;
+    html += '</tr>';
+  }
+  tbody.innerHTML = html;
+}
+
+function updateResult(cxs, type) {
+  const icon = document.getElementById('statusIcon');
+  const title = document.getElementById('statusTitle');
+  const desc = document.getElementById('statusDesc');
+
+  if (!cxs || !type) {
+    icon.className = 'status-icon pending';
+    icon.textContent = '❓';
+    title.className = 'pending'; title.textContent = 'En attente de saisie';
+    desc.textContent = 'Sélectionnez le Competitive Level, le Confidentiality Level et le Cloud Type pour obtenir une décision.';
+    return;
+  }
+
+  const status = compliance[type][cxs];
+  const msgs = {
+    green: ['✓', 'GREEN — Conforme', 'Ce type de cloud est aligné avec le Cloud Blueprint. La validation de la "Rule 0" est requise.'],
+    'green-special': ['!', 'GREEN Special — Décision locale requise', 'Requiert une décision locale avec attention particulière à la protection des actifs. À souligner dans le Risk Assessment.'],
+    red: ['✕', 'RED — Interdit · Escalade Groupe obligatoire', 'Ce type de cloud est INTERDIT pour ce niveau CXS. Une escalade auprès du Groupe (CMAT / Group CIO) est obligatoire. L\'arbitrage CMAT est mandataire.']
+  };
+
+  const [iconText, titleText, descText] = msgs[status];
+  icon.className = `status-icon ${status}`;
+  icon.textContent = iconText;
+  title.className = status; title.textContent = titleText;
+  desc.textContent = descText;
+
+  // Animate
+  document.getElementById('resultPanel').classList.remove('animate');
+  void document.getElementById('resultPanel').offsetWidth;
+  document.getElementById('resultPanel').classList.add('animate');
+}
+
+function compute() {
+  const comp = document.getElementById('compLevel').value;
+  const conf = document.getElementById('confLevel').value;
+
+  // Update matrix highlight
+  document.querySelectorAll('#matrixBody td[data-r]').forEach(td => td.classList.remove('active-cell'));
+
+  let cxs = null;
+  if (comp && conf) {
+    cxs = matrix[comp][conf];
+    const badge = document.getElementById('cxsResult');
+    badge.textContent = `CXS ${cxs}`;
+    badge.className = `cxs-badge cxs${cxs}`;
+
+    // highlight matrix cell
+    const cell = document.querySelector(`#matrixBody td[data-r="${comp}"][data-c="${conf}"]`);
+    if (cell) cell.classList.add('active-cell');
+
+    // steps
+    document.getElementById('step2-ind').classList.add('active');
+  } else {
+    document.getElementById('cxsResult').textContent = '—';
+    document.getElementById('cxsResult').className = 'cxs-badge none';
+  }
+
+  buildComplianceTable(cxs, selectedType);
+  updateResult(cxs, selectedType);
+  updateExamples();
+}
+
+function selectType(btn) {
+  document.querySelectorAll('.cloud-type-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  selectedType = parseInt(btn.dataset.type);
+
+  document.getElementById('step3-ind').classList.add('active');
+
+  const comp = document.getElementById('compLevel').value;
+  const conf = document.getElementById('confLevel').value;
+  const cxs = (comp && conf) ? matrix[comp][conf] : null;
+
+  buildComplianceTable(cxs, selectedType);
+  updateResult(cxs, selectedType);
+  updateExamples();
+}
+
+function updateExamples() {
+  document.querySelectorAll('.example-card').forEach(c => {
+    c.classList.toggle('active', selectedType && parseInt(c.dataset.type) === selectedType);
+  });
+}
+
+function reset() {
+  document.getElementById('compLevel').value = '';
+  document.getElementById('confLevel').value = '';
+  selectedType = null;
+  document.querySelectorAll('.cloud-type-btn').forEach(b => b.classList.remove('selected'));
+  document.querySelectorAll('#matrixBody td[data-r]').forEach(td => td.classList.remove('active-cell'));
+  document.getElementById('cxsResult').textContent = '—';
+  document.getElementById('cxsResult').className = 'cxs-badge none';
+  document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+  document.getElementById('step1-ind').classList.add('active');
+  buildComplianceTable(null, null);
+  updateResult(null, null);
+  updateExamples();
+}
+
+// Init
+buildComplianceTable(null, null);
+</script>
+</body>
+</html>
