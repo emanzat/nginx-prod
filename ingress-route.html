@@ -1,4 +1,14 @@
 
+<!--
+  =====================================================================
+  Ingress IKS -> Route ROKS : analyseur de terminaison TLS
+  Fragment pour macro HTML Confluence (JS activé requis).
+  - Aucun CDN / aucun appel reseau (parser YAML embarque).
+  - Tout est scope sous #i2r-app : ne touche ni au CSS ni au JS de la page.
+  - Coller l'INTEGRALITE de ce bloc dans le corps de la macro HTML.
+  - Concu pour une seule instance par page.
+  =====================================================================
+-->
 <div id="i2r-app">
   <div class="i2r-wrap">
     <div class="i2r-head">
@@ -130,9 +140,11 @@
         if(!lines.length)throw new Error("Contenu vide apres nettoyage.");
         var i=0;
         function node(indent){return lines[i].content[0]==='-'?seq(indent):map(indent);}
-        function map(indent){var o={};while(i<lines.length){var ln=lines[i];if(ln.indent<indent)break;if(ln.indent>indent)break;if(ln.content[0]==='-')break;var ci=findColon(ln.content);var k=unq(ln.content.slice(0,ci).trim());var rest=ln.content.slice(ci+1).trim();i++;if(rest===''){var nx=lines[i];if(nx&&nx.indent>indent)o[k]=node(nx.indent);else if(nx&&nx.indent===indent&&nx.content[0]==='-')o[k]=seq(indent);else o[k]=null;}else if(rest[0]==='{'||rest[0]==='[')o[k]=parseFlow(rest);else o[k]=scalar(rest);}return o;}
+        function isBlockScalarHeader(rest){return /^[|>][+-]?\d*$/.test(rest);}
+      function consumeBlockScalar(headerIndent,style){var blockLines=[];while(i<lines.length&&lines[i].indent>headerIndent){blockLines.push(lines[i].content);i++;}return style==='|'?blockLines.join('\n'):blockLines.join(' ');}
+      function map(indent){var o={};while(i<lines.length){var ln=lines[i];if(ln.indent<indent)break;if(ln.indent>indent)break;if(ln.content[0]==='-')break;var ci=findColon(ln.content);var k=unq(ln.content.slice(0,ci).trim());var rest=ln.content.slice(ci+1).trim();var headerIndent=ln.indent;i++;if(isBlockScalarHeader(rest)){o[k]=consumeBlockScalar(headerIndent,rest[0]);}else if(rest===''){var nx=lines[i];if(nx&&nx.indent>indent)o[k]=node(nx.indent);else if(nx&&nx.indent===indent&&nx.content[0]==='-')o[k]=seq(indent);else o[k]=null;}else if(rest[0]==='{'||rest[0]==='[')o[k]=parseFlow(rest);else o[k]=scalar(rest);}return o;}
         function seq(indent){var a=[];while(i<lines.length){var ln=lines[i];if(ln.indent<indent)break;if(ln.indent>indent)break;if(ln.content[0]!=='-')break;var after=ln.content.slice(1).trim();if(after===''){i++;var nx=lines[i];if(nx&&nx.indent>indent)a.push(node(nx.indent));else a.push(null);}else if(after[0]==='{'||after[0]==='['){a.push(parseFlow(after));i++;}else if(findColon(after)>=0&&after[0]!=='"'&&after[0]!=="'"){a.push(seqMap(ln.indent,after));}else{a.push(scalar(after));i++;}}return a;}
-        function seqMap(dash,first){var o={};var ci=findColon(first);var k=unq(first.slice(0,ci).trim());var rest=first.slice(ci+1).trim();i++;if(rest===''){var nx=lines[i];if(nx&&nx.indent>dash)o[k]=node(nx.indent);else o[k]=null;}else if(rest[0]==='{'||rest[0]==='[')o[k]=parseFlow(rest);else o[k]=scalar(rest);while(i<lines.length){var ln=lines[i];if(ln.indent<=dash)break;var m=map(ln.indent);for(var key in m)o[key]=m[key];break;}return o;}
+        function seqMap(dash,first){var o={};var ci=findColon(first);var k=unq(first.slice(0,ci).trim());var rest=first.slice(ci+1).trim();i++;if(isBlockScalarHeader(rest)){o[k]=consumeBlockScalar(dash,rest[0]);}else if(rest===''){var nx=lines[i];if(nx&&nx.indent>dash)o[k]=node(nx.indent);else o[k]=null;}else if(rest[0]==='{'||rest[0]==='[')o[k]=parseFlow(rest);else o[k]=scalar(rest);while(i<lines.length){var ln=lines[i];if(ln.indent<=dash)break;var m=map(ln.indent);for(var key in m)o[key]=m[key];break;}return o;}
         return node(lines[0].indent);
       }
       function parseInput(text){
