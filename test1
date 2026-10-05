@@ -1,0 +1,198 @@
+
+
+extract:                                     # nom attendu par 'dependencies: - extract' des jobs d'envoi
+  stage: extract                             # A VERIFIER : nom du stage dans ton liste 'stages:'
+  allow_failure: true                        # A VERIFIER : voir remarque (le job échoue si une requête Sysdig échoue)
+  image: ${IBMCLOUD_CLI_IMAGE}               # A VERIFIER : ibmcloud, kubectl, jq, openssl, awk, curl
+  variables:
+    NPERCENTILE: "0.95"                      # percentile de la conso (0.95 = P95)
+    WINDOW: "24h"                            # fenêtre d'analyse (ex. 24h, 7d)
+    NS_REGEX: "ns.*"                         # namespaces analysés (".*" = tous)
+    DECIMAL_SEP: ","                         # "," pour Excel FR, "." sinon
+    NCLUSTER: "all-all-all"                  # A VERIFIER : 3e champ (séparateur "-") = cluster ou "all"
+    NENV: "all"                              # A VERIFIER
+    NACCOUNT: "all"                          # A VERIFIER
+    NDEBUG: "FALSE"
+    REGION: "eu-de"                          # A VERIFIER
+    # NLOGIN : commande de login ibmcloud complète, variable CI masquée (comme dans l'ancien script)
+    # SYSDIG_MONITORING_TOKEN : variable CI masquée (même format qu'avant)
+  script:
+    - |
+      # ------------------------------------------------------------
+      # 1. Contexte réseau + login IBM Cloud
+      # ------------------------------------------------------------
+      export http_proxy=
+      export https_proxy=
+      export no_proxy=
+ibmcloud config --check-version=false
+      ${NLOGIN} -r ${REGION}
+
+      cluster=$(echo $NCLUSTER | awk -F"-" '{print $3}')      # A VERIFIER : séparateur "-" ou "~"
+      urlcluster=""
+      urlcorrespondance=""
+      SYSDIG_URL=""
+
+      dir=rep
+      mkdir -p $dir
+      : > $dir/raw.csv          # METRIC;cluster;ns;workload;type;container;valeur
+      : > $dir/nsmap.csv        # cluster;namespace;apcode
+      : > $dir/clusters.csv     # cluster;env
+      : > $dir/errors.log
+
+      # Correspondance APCODE -> TRIBE ; DOMAIN  (A VERIFIER : colonnes apcode;tribe;domain)
+      curl -s $urlcorrespondance > $dir/correspondance
+      IBMACCOUNTJSON=$(curl -s $urlcluster)
+
+      # ------------------------------------------------------------
+      # 2. Fonction d'interrogation Sysdig (Prometheus API)
+      #    $1 = nom de la colonne, $2 = requête PromQL
+      # ------------------------------------------------------------
+      LS="kube_cluster_name,kube_namespace_name,kube_workload_name,kube_workload_type,container_name"
+      LK="kube_cluster_name,kube_namespace_name,kube_workload_name,kube_workload_type,kube_pod_container_name"
+
+      query() {
+        resp=$(curl -sf -G --noproxy "*" --data-urlencode "query=$2" -H "Authorization: Bearer $bearer" "$SYSDIG_URL") \
+          && echo "$resp" | jq -e '.status=="success"' > /dev/null \
+          || { echo "$clusteriks;$1" >> $dir/errors.log; return 0; }
+        echo "$resp" | jq -r --arg m "$1" '
+          .data.result[]
+          | .value[1] as $v
+          | select($v | test("NaN|Inf") | not)
+          | .metric
+          | [$m, .kube_cluster_name, .kube_namespace_name, .kube_workload_name, .kube_workload_type, (.container_name // .kube_pod_container_name), $v]
+          | join(";")' >> $dir/raw.csv
+      }
+
+      # ------------------------------------------------------------
+      # 3. Sélection des clusters puis extraction
+      # ------------------------------------------------------------
+      echo ${IBMACCOUNTJSON} | jq --arg env "${NENV}" --arg id "${NACCOUNT}" --arg cluster "${cluster}" -r '
+        .env[]
+        | select(.id == $id or $id == "all")
+        | .id as $id
+        | .clusters[]
+        | select(
+            ($env == "all")
+            or (.env == $env)
+          )
+        | select(
+            ($cluster == "all")
+            or (.name == $cluster)
+          )
+        | $id+";"+.name+";"+.desc+";"+.env+";"+.vip+";"+(.listns // "NA")
+      ' | while read LINE; do
+        account=`echo "$LINE" | awk -F";" '{print $1}'`
+        accountid=$(ibmcloud account list --output json | jq -r --arg ibm $account '.[] | select(.LinkedAccounts[0].id==$ibm) | .Guid')
+        clusteriks=`echo "$LINE" | awk -F";" '{print $2}'`
+        env=`echo "$LINE" | awk -F";" '{print $4}'`
+        vip=`echo "$LINE" | awk -F";" '{print $5}'`
+
+        echo "== account $account cluster $clusteriks env $env"
+
+        # Accès au cluster (identique à l'ancien script)
+        ibmcloud target -c ${accountid} > /dev/null
+        clusterid=$(ibmcloud ks cluster ls --provider vpc-gen2 --output json | jq -r --arg cluster $clusteriks '.[] | select(.name==$cluster) | .id')
+
+        ibmcloud ks cluster config --cluster $clusterid > OUTPUT_CONFIG-$clusteriks
+        eval $(grep export OUTPUT_CONFIG-$clusteriks)
+        sed -i s%" https://c.*"%" https://$vip"%g ~/.kube/config
+        echo Q | openssl s_client -showcerts -servername $vip -connect $vip 2>/dev/null | openssl x509 -text | sed -ne "/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p" > /etc/ibmcloud/.bluemix/plugins/container-service/clusters/$clusteriks-$clusterid/ca-aaa00-$clusteriks.pem
+        sed -i s%" /etc/ibmcloud/.bluemix/plugins/container-service/clusters/$clusteriks-$clusterid/"%" "%g ~/.kube/config
+        cp /etc/ibmcloud/.bluemix/plugins/container-service/clusters/$clusteriks-$clusterid/ca-aaa00-$clusteriks.pem /home/visitor/.kube/
+
+        # SYSDIG_MONITORING_TOKEN a le format 2303712XXX<token1>_2949141XXX<token2>_...
+        # (XXX = séparateur, le préfixe = compte IBM)
+        bearer=$(echo $SYSDIG_MONITORING_TOKEN | sed "s,_,\n,g" | grep "$account" | tail -1 | awk -F"XXX" '{print $2}')
+
+        # Correspondance cluster / env et cluster / namespace / apcode
+        echo "$clusteriks;$env" >> $dir/clusters.csv
+        kubectl get ns -o json | jq -r --arg c "$clusteriks" --arg re "^(${NS_REGEX})\$" '
+          .items[]
+          | select(.metadata.name | test($re))
+          | [$c, .metadata.name, (.metadata.labels.apCode // "")]
+          | join(";")' >> $dir/nsmap.csv || echo "$clusteriks;kubectl" >> $dir/errors.log
+
+        # Sélecteur commun
+        SEL="kube_cluster_name=\"${clusteriks}\",kube_namespace_name=~\"${NS_REGEX}\""
+
+        # --- CPU usage (cores) : moyenne, percentile, max sur la fenêtre
+        query CPU_AVG "sum by ($LS) (avg_over_time(sysdig_container_cpu_cores_used{$SEL}[$WINDOW]))"
+        query CPU_PXX "sum by ($LS) (quantile_over_time($NPERCENTILE,sysdig_container_cpu_cores_used{$SEL}[$WINDOW]))"
+        query CPU_MAX "sum by ($LS) (max_over_time(sysdig_container_cpu_cores_used{$SEL}[$WINDOW]))"
+
+        # --- Mémoire working set (octets) : moyenne, percentile, max   A VERIFIER : métrique Sysdig
+        query MEM_AVG "sum by ($LS) (avg_over_time(sysdig_container_memory_used_bytes{$SEL}[$WINDOW]))"
+        query MEM_PXX "sum by ($LS) (quantile_over_time($NPERCENTILE,sysdig_container_memory_used_bytes{$SEL}[$WINDOW]))"
+        query MEM_MAX "sum by ($LS) (max_over_time(sysdig_container_memory_used_bytes{$SEL}[$WINDOW]))"
+
+        # --- Requests / limits (valeurs actuelles) + nombre de réplicas
+        query CPU_REQ "sum by ($LK) (kube_pod_container_resource_requests{resource=\"cpu\",$SEL})"
+        query CPU_LIM "sum by ($LK) (kube_pod_container_resource_limits{resource=\"cpu\",$SEL})"
+        query MEM_REQ "sum by ($LK) (kube_pod_container_resource_requests{resource=\"memory\",$SEL})"
+        query MEM_LIM "sum by ($LK) (kube_pod_container_resource_limits{resource=\"memory\",$SEL})"
+        query REPLICAS "count by ($LK) (kube_pod_container_resource_requests{resource=\"cpu\",$SEL})"
+      done
+
+      # ------------------------------------------------------------
+      # 4. Consolidation : une ligne par cluster/ns/workload/conteneur
+      #    (valeurs = somme des réplicas ; mémoire en MiB ; décimales Excel)
+      # ------------------------------------------------------------
+      PCT="P$(awk -v p="$NPERCENTILE" 'BEGIN{printf "%.0f", p*100}')"
+      echo "CLUSTER;ENV;NAMESPACE;APCODE;TRIBE;DOMAIN;WORKLOAD;WORKLOAD TYPE;CONTAINER;REPLICAS;CPU USAGE AVG (cores);CPU USAGE ${PCT} (cores);CPU USAGE MAX (cores);CPU REQUEST (cores);CPU LIMIT (cores);MEM WS AVG (MiB);MEM WS ${PCT} (MiB);MEM WS MAX (MiB);MEM REQUEST (MiB);MEM LIMIT (MiB)" > $dir/res-consumption.csv
+
+      awk -F';' -v OFS=';' -v dec="$DECIMAL_SEP" -v fcl="$dir/clusters.csv" -v fns="$dir/nsmap.csv" -v fco="$dir/correspondance" '
+      function num(m, k, fmt, div,   s) {
+        if (!((m, k) in val)) return ""
+        s = sprintf(fmt, val[m, k] / div)
+        if (dec != ".") gsub(/\./, dec, s)
+        return s
+      }
+      { sub(/\r$/, "") }
+      FILENAME == fcl { env[$1] = $2; next }
+      FILENAME == fns { ap[$1, $2] = $3; next }
+      FILENAME == fco { tribe[$1] = $2; dom[$1] = $3; next }
+      { k = $2 OFS $3 OFS $4 OFS $5 OFS $6; val[$1, k] = $7; keys[k] = 1 }
+      END {
+        MIB = 1048576
+        for (k in keys) {
+          split(k, p, ";")
+          a = ap[p[1], p[2]]
+          print p[1], env[p[1]], p[2], a, tribe[a], dom[a], p[3], p[4], p[5], \
+                num("REPLICAS", k, "%d", 1), \
+                num("CPU_AVG", k, "%.3f", 1), num("CPU_PXX", k, "%.3f", 1), num("CPU_MAX", k, "%.3f", 1), \
+                num("CPU_REQ", k, "%.3f", 1), num("CPU_LIM", k, "%.3f", 1), \
+                num("MEM_AVG", k, "%.0f", MIB), num("MEM_PXX", k, "%.0f", MIB), num("MEM_MAX", k, "%.0f", MIB), \
+                num("MEM_REQ", k, "%.0f", MIB), num("MEM_LIM", k, "%.0f", MIB)
+        }
+      }' $dir/clusters.csv $dir/nsmap.csv $dir/correspondance $dir/raw.csv \
+        | sort -t';' -k1,1 -k3,3 -k7,7 >> $dir/res-consumption.csv
+
+      echo "Lignes extraites : $(($(wc -l < $dir/res-consumption.csv) - 1))"
+      if [ "$NDEBUG" = "TRUE" ]; then
+        head -20 $dir/res-consumption.csv
+      fi
+
+      # Échec du job si au moins une requête / un cluster a échoué (le CSV reste publié)
+      if [ -s $dir/errors.log ]; then
+        echo "ERREURS (cluster;métrique) :"
+        cat $dir/errors.log
+        exit 1
+      fi
+  artifacts:
+    paths:
+      - rep
+    expire_in: 1h
+
+Sendresult:
+  image:
+    name: image-registry.openshift-image-registry.svc:5000/ns001b004551/python:3.10.13   # A VERIFIER : photo floue (ns001b004551 ?)
+  stage: Sendresult
+  extends: .send_email
+  dependencies:
+    - extract
+  variables:
+    MAIL_SUBJECT: "Extract Pod Consumption (CPU / Memory)"
+    MAIL_BODY: "Please find attached Pod consumption, requests and limits"
+    MAIL_ATTACHEMENT: "rep/res-consumption.csv"
+  script:
+    - echo ""
