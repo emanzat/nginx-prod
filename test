@@ -1,0 +1,254 @@
+#!/usr/bin/env bash
+# =====================================================================
+# extract-consumption.sh
+# Extraction consommation / requests / limits (CPU + mémoire) via l'API
+# Prometheus de Sysdig, sur les clusters IKS, avec APCODE / TRIBE / DOMAIN.
+# Version locale (sans GitLab CI) du job "extract". Compatible bash 3.2 (macOS).
+# =====================================================================
+set -u
+set -o pipefail
+
+# ----------------------------- Défauts -------------------------------
+ACCOUNT="all"
+ENVF="all"
+CLUSTER="all"
+PERCENTILE="0.95"
+WINDOW="24h"
+NS_REGEX="ns.*"
+OUTDIR="./rep"
+DEC=","
+REGION="eu-de"
+PROXY=""
+DEBUG=0
+CLUSTERS_SRC=""
+CORR_SRC=""
+SYSDIG_URL=""
+
+usage() {
+  cat <<EOF
+Usage : $(basename "$0") [options]
+
+Sélection
+  -a ACCOUNT   compte IBM du clusters.json            (défaut : all)
+  -e ENV       environnement                          (défaut : all)
+  -c CLUSTER   nom exact du cluster                   (défaut : all)
+  -n REGEX     namespaces analysés, style PromQL      (défaut : ns.*  ; ".*" = tous)
+
+Mesure
+  -p PCT       percentile de la conso, entre 0 et 1   (défaut : 0.95)
+  -w WINDOW    fenêtre d'analyse : 30m, 24h, 7d...    (défaut : 24h)
+
+Sortie
+  -o DIR       dossier de sortie                      (défaut : ./rep)
+  -d SEP       séparateur décimal : "," ou "."        (défaut : ",")
+
+Environnement
+  -r REGION    région IBM Cloud pour le login         (défaut : eu-de)
+  -x PROXY     proxy HTTP(S), ex. http://bizproxy:3131 (défaut : aucun)
+  -j SRC       clusters.json : URL ou fichier local   (défaut : URL GitLab)
+  -m SRC       fichier correspondance : URL ou fichier local (apcode;tribe;domain)
+  -D           mode debug
+  -h           cette aide
+
+Variables d'environnement
+  SYSDIG_MONITORING_TOKEN   obligatoire, format 2303712XXX<token1>_2949141XXX<token2>_...
+  NLOGIN                    commande de login ibmcloud (optionnel, reçoit "-r REGION")
+  IBMCLOUD_API_KEY          alternative : login par clé d'API (optionnel)
+  (sans NLOGIN ni clé : la session ibmcloud déjà ouverte est utilisée)
+
+Exemples
+  $(basename "$0") -c mon-cluster -e prod
+  $(basename "$0") -c mon-cluster -w 7d -p 0.99 -o /tmp/conso
+EOF
+}
+
+die() { echo "ERREUR : $*" >&2; exit 2; }
+info() { echo "$*" >&2; }
+
+# ----------------------------- Options -------------------------------
+while getopts "a:e:c:n:p:w:o:d:r:x:j:m:Dh" opt; do
+  case "$opt" in
+    a) ACCOUNT="$OPTARG" ;;
+    e) ENVF="$OPTARG" ;;
+    c) CLUSTER="$OPTARG" ;;
+    n) NS_REGEX="$OPTARG" ;;
+    p) PERCENTILE="$OPTARG" ;;
+    w) WINDOW="$OPTARG" ;;
+    o) OUTDIR="$OPTARG" ;;
+    d) DEC="$OPTARG" ;;
+    r) REGION="$OPTARG" ;;
+    x) PROXY="$OPTARG" ;;
+    j) CLUSTERS_SRC="$OPTARG" ;;
+    m) CORR_SRC="$OPTARG" ;;
+    D) DEBUG=1 ;;
+    h) usage; exit 0 ;;
+    *) usage >&2; exit 2 ;;
+  esac
+done
+
+# ----------------------------- Contrôles -----------------------------
+echo "$PERCENTILE" | grep -Eq '^(0(\.[0-9]+)?|1)$' || die "percentile invalide : $PERCENTILE (attendu entre 0 et 1)"
+echo "$WINDOW"     | grep -Eq '^[0-9]+[smhdw]$'      || die "fenêtre invalide : $WINDOW (ex. 30m, 24h, 7d)"
+[ "$DEC" = "," ] || [ "$DEC" = "." ] || die "séparateur décimal invalide : $DEC"
+[ -n "${SYSDIG_MONITORING_TOKEN:-}" ] || die "SYSDIG_MONITORING_TOKEN n'est pas défini"
+for bin in ibmcloud kubectl jq curl awk openssl sort tr grep; do
+  command -v "$bin" > /dev/null 2>&1 || die "commande introuvable : $bin"
+done
+
+mkdir -p "$OUTDIR" || die "impossible de créer $OUTDIR"
+TMP=$(mktemp -d "${TMPDIR:-/tmp}/extract-consumption.XXXXXX") || die "mktemp a échoué"
+trap 'rm -rf "$TMP"' EXIT
+
+RAW="$TMP/raw.csv"; NSMAP="$TMP/nsmap.csv"; CLUS="$TMP/clusters.csv"; ERR="$TMP/errors.log"; CORR="$TMP/correspondance"
+: > "$RAW"; : > "$NSMAP"; : > "$CLUS"; : > "$ERR"
+
+# ----------------------------- Réseau / login ------------------------
+if [ -n "$PROXY" ]; then
+  export http_proxy="$PROXY" https_proxy="$PROXY"
+  export no_proxy="localhost,127.0.0.1,localaddress,.localdomain,127.*,192.168.*,172.*,10.*,159.50.*,.echonet,.net.intra,.paribas.com,.bnp.fr,.csg.local,kickstart-prod,kickstart-back"
+fi
+ibmcloud config --check-version=false > /dev/null 2>&1
+
+if [ -n "${NLOGIN:-}" ]; then
+  # shellcheck disable=SC2086
+  $NLOGIN -r "$REGION" > /dev/null || die "login ibmcloud (NLOGIN) en échec"
+elif [ -n "${IBMCLOUD_API_KEY:-}" ]; then
+  ibmcloud login --apikey "$IBMCLOUD_API_KEY" -r "$REGION" > /dev/null || die "login ibmcloud (clé d'API) en échec"
+fi
+ACCOUNT_LIST=$(ibmcloud account list --output json 2> /dev/null) || die "pas de session IBM Cloud : connecte-toi (ibmcloud login) ou définis NLOGIN / IBMCLOUD_API_KEY"
+
+# ----------------------------- Sources -------------------------------
+fetch() { case "$1" in http://*|https://*) curl -sf "$1" ;; *) cat "$1" ;; esac; }
+
+CLUSTERS_JSON=$(fetch "$CLUSTERS_SRC") || die "lecture impossible : $CLUSTERS_SRC"
+fetch "$CORR_SRC" > "$CORR" || { info "AVERTISSEMENT : correspondance illisible ($CORR_SRC), TRIBE/DOMAIN seront vides"; : > "$CORR"; }
+
+# ----------------------------- Requêtes ------------------------------
+LS="kube_cluster_name,kube_namespace_name,kube_workload_name,kube_workload_type,container_name"
+LK="kube_cluster_name,kube_namespace_name,kube_workload_name,kube_workload_type,kube_pod_container_name"
+
+# $1 = nom de colonne, $2 = requête PromQL (utilise $bearer et $clusteriks)
+query() {
+  local resp
+  resp=$(curl -sf -G --noproxy "*" --data-urlencode "query=$2" -H "Authorization: Bearer $bearer" "$SYSDIG_URL") \
+    && echo "$resp" | jq -e '.status=="success"' > /dev/null \
+    || { echo "$clusteriks;$1" >> "$ERR"; return 0; }
+  echo "$resp" | jq -r --arg m "$1" '
+    .data.result[]
+    | .value[1] as $v
+    | select($v | test("NaN|Inf") | not)
+    | .metric
+    | [$m, .kube_cluster_name, .kube_namespace_name, .kube_workload_name, .kube_workload_type, (.container_name // .kube_pod_container_name), $v]
+    | join(";")' >> "$RAW"
+}
+
+# ----------------------------- Boucle clusters -----------------------
+NB=0
+while IFS=';' read -r account clusteriks _desc env vip _listns <&3; do
+  [ -n "$clusteriks" ] || continue
+  NB=$((NB + 1))
+  info "== compte $account | cluster $clusteriks | env $env"
+
+  accountid=$(echo "$ACCOUNT_LIST" | jq -r --arg ibm "$account" '.[] | select(.LinkedAccounts[0].id==$ibm) | .Guid')
+  [ -n "$accountid" ] || { echo "$clusteriks;account" >> "$ERR"; continue; }
+  ibmcloud target -c "$accountid" > /dev/null 2>&1
+
+  clusterid=$(ibmcloud ks cluster ls --provider vpc-gen2 --output json | jq -r --arg c "$clusteriks" '.[] | select(.name==$c) | .id')
+  [ -n "$clusterid" ] || { echo "$clusteriks;clusterid" >> "$ERR"; continue; }
+
+  # kubeconfig dédié dans le dossier temporaire (n'écrase pas ~/.kube/config si le plugin respecte KUBECONFIG)
+  export KUBECONFIG="$TMP/kubeconfig-$clusteriks"
+  cfgout=$(ibmcloud ks cluster config --cluster "$clusterid" 2>&1) || { echo "$clusteriks;kubeconfig" >> "$ERR"; continue; }
+  eval "$(echo "$cfgout" | grep '^export ' || true)"     # anciennes versions du plugin : export KUBECONFIG=...
+
+  # Accès via la VIP (endpoint privé) : URL + certificat de la VIP
+  cacert="$TMP/ca-$clusteriks.pem"
+  echo Q | openssl s_client -showcerts -servername "${vip%%:*}" -connect "$vip" 2> /dev/null \
+    | openssl x509 -text | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' > "$cacert"
+  ctxcluster=$(kubectl config view --minify -o jsonpath='{.clusters[0].name}' 2> /dev/null)
+  kubectl config set-cluster "$ctxcluster" --server="https://$vip" --certificate-authority="$cacert" --embed-certs=true > /dev/null 2>&1
+
+  # Token Sysdig du compte (format ...XXX = séparateur, préfixe = compte IBM)
+  bearer=$(echo "$SYSDIG_MONITORING_TOKEN" | tr '_' '\n' | grep "$account" | tail -1 | awk -F"XXX" '{print $2}')
+  [ -n "$bearer" ] || { echo "$clusteriks;sysdig-token" >> "$ERR"; continue; }
+
+  # Correspondance cluster/env et cluster/namespace/apcode
+  echo "$clusteriks;$env" >> "$CLUS"
+  kubectl get ns -o json --request-timeout=30s \
+    | jq -r --arg c "$clusteriks" --arg re "^(${NS_REGEX})\$" '
+        .items[]
+        | select(.metadata.name | test($re))
+        | [$c, .metadata.name, (.metadata.labels.apCode // "")]
+        | join(";")' >> "$NSMAP" || echo "$clusteriks;kubectl" >> "$ERR"
+
+  SEL="kube_cluster_name=\"${clusteriks}\",kube_namespace_name=~\"${NS_REGEX}\""
+
+  # CPU usage (cores)
+  query CPU_AVG "sum by ($LS) (avg_over_time(sysdig_container_cpu_cores_used{$SEL}[$WINDOW]))"
+  query CPU_PXX "sum by ($LS) (quantile_over_time($PERCENTILE,sysdig_container_cpu_cores_used{$SEL}[$WINDOW]))"
+  query CPU_MAX "sum by ($LS) (max_over_time(sysdig_container_cpu_cores_used{$SEL}[$WINDOW]))"
+  # Mémoire working set (octets)
+  query MEM_AVG "sum by ($LS) (avg_over_time(sysdig_container_memory_used_bytes{$SEL}[$WINDOW]))"
+  query MEM_PXX "sum by ($LS) (quantile_over_time($PERCENTILE,sysdig_container_memory_used_bytes{$SEL}[$WINDOW]))"
+  query MEM_MAX "sum by ($LS) (max_over_time(sysdig_container_memory_used_bytes{$SEL}[$WINDOW]))"
+  # Requests / limits (valeurs actuelles) + réplicas
+  query CPU_REQ  "sum by ($LK) (kube_pod_container_resource_requests{resource=\"cpu\",$SEL})"
+  query CPU_LIM  "sum by ($LK) (kube_pod_container_resource_limits{resource=\"cpu\",$SEL})"
+  query MEM_REQ  "sum by ($LK) (kube_pod_container_resource_requests{resource=\"memory\",$SEL})"
+  query MEM_LIM  "sum by ($LK) (kube_pod_container_resource_limits{resource=\"memory\",$SEL})"
+  query REPLICAS "count by ($LK) (kube_pod_container_resource_requests{resource=\"cpu\",$SEL})"
+done 3< <(echo "$CLUSTERS_JSON" | jq --arg env "$ENVF" --arg id "$ACCOUNT" --arg cluster "$CLUSTER" -r '
+  .env[]
+  | select(.id == $id or $id == "all")
+  | .id as $id
+  | .clusters[]
+  | select(($env == "all") or (.env == $env))
+  | select(($cluster == "all") or (.name == $cluster))
+  | $id+";"+.name+";"+.desc+";"+.env+";"+.vip+";"+(.listns // "NA")')
+
+[ "$NB" -gt 0 ] || die "aucun cluster ne correspond à la sélection (-a $ACCOUNT -e $ENVF -c $CLUSTER)"
+[ "$DEBUG" -eq 1 ] && cp "$RAW" "$OUTDIR/raw.csv"
+
+# ----------------------------- Consolidation -------------------------
+PCT="P$(awk -v p="$PERCENTILE" 'BEGIN{printf "%.0f", p*100}')"
+OUT="$OUTDIR/res-consumption.csv"
+echo "CLUSTER;ENV;NAMESPACE;APCODE;TRIBE;DOMAIN;WORKLOAD;WORKLOAD TYPE;CONTAINER;REPLICAS;CPU USAGE AVG (cores);CPU USAGE ${PCT} (cores);CPU USAGE MAX (cores);CPU REQUEST (cores);CPU LIMIT (cores);MEM WS AVG (MiB);MEM WS ${PCT} (MiB);MEM WS MAX (MiB);MEM REQUEST (MiB);MEM LIMIT (MiB)" > "$OUT"
+
+awk -F';' -v OFS=';' -v dec="$DEC" -v fcl="$CLUS" -v fns="$NSMAP" -v fco="$CORR" '
+function num(m, k, fmt, div,   s) {
+  if (!((m, k) in val)) return ""
+  s = sprintf(fmt, val[m, k] / div)
+  if (dec != ".") gsub(/\./, dec, s)
+  return s
+}
+{ sub(/\r$/, "") }
+FILENAME == fcl { env[$1] = $2; next }
+FILENAME == fns { ap[$1, $2] = $3; next }
+FILENAME == fco { tribe[$1] = $2; dom[$1] = $3; next }
+{ k = $2 OFS $3 OFS $4 OFS $5 OFS $6; val[$1, k] = $7; keys[k] = 1 }
+END {
+  MIB = 1048576
+  for (k in keys) {
+    split(k, p, ";")
+    a = ap[p[1], p[2]]
+    print p[1], env[p[1]], p[2], a, tribe[a], dom[a], p[3], p[4], p[5], \
+          num("REPLICAS", k, "%d", 1), \
+          num("CPU_AVG", k, "%.3f", 1), num("CPU_PXX", k, "%.3f", 1), num("CPU_MAX", k, "%.3f", 1), \
+          num("CPU_REQ", k, "%.3f", 1), num("CPU_LIM", k, "%.3f", 1), \
+          num("MEM_AVG", k, "%.0f", MIB), num("MEM_PXX", k, "%.0f", MIB), num("MEM_MAX", k, "%.0f", MIB), \
+          num("MEM_REQ", k, "%.0f", MIB), num("MEM_LIM", k, "%.0f", MIB)
+  }
+}' "$CLUS" "$NSMAP" "$CORR" "$RAW" | sort -t';' -k1,1 -k3,3 -k7,7 >> "$OUT"
+
+ROWS=$(($(wc -l < "$OUT") - 1))
+info ""
+info "Clusters traités : $NB | lignes extraites : $ROWS"
+info "Fichier : $OUT"
+
+if [ -s "$ERR" ]; then
+  cp "$ERR" "$OUTDIR/errors.log"
+  info "ERREURS (cluster;étape/métrique), détail dans $OUTDIR/errors.log :"
+  cat "$ERR" >&2
+  exit 1
+fi
+exit 0
