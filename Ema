@@ -1,0 +1,317 @@
+extract:
+  image:
+    name: image-registry.openshift-image-registry.svc:5000/ns001b004551/cloudtools:1.2.1
+  stage: extract
+  variables:
+    # --- Sélection (inchangée) ---
+    NCLUSTER: "all-all-all"            # <x>-<y>-<cluster> : seul le 3e champ est utilisé
+    NENV: "all"
+    NACCOUNT: "all"
+    NS_REGEX: "ns.*"
+    # --- Format de sortie ---
+    DECIMAL_SEP: ","                   # Excel français
+    NDEBUG: "FALSE"                    # TRUE : affiche un aperçu des CSV (sans secret)
+    STRICT: "true"                     # true : job en échec si une extraction CPU/mémoire est incomplète
+    # --- Métriques et labels Sysdig (à valider, voir la liste de vérification) ---
+    REQ_METRIC: "kube_pod_container_resource_requests"
+    REQ_CPU_SEL: 'resource="cpu"'
+    REQ_MEM_SEL: 'resource="memory"'
+    PHASE_METRIC: "kube_pod_status_phase"
+    POD_PHASE_FILTER: "true"           # true : ne compte que les pods Pending/Running
+    NS_LABELS_METRIC: "kube_namespace_labels"
+    APCODE_PROM_LABEL: "label_apcode"
+    LABEL_CLUSTER: "kube_cluster_name"
+    LABEL_NS: "kube_namespace_name"
+    LABEL_POD: "kube_pod_name"
+    LABEL_CONTAINER: "container"
+    CURL_MAX_TIME: "180"
+  script:
+    - |
+      set -euo pipefail
+      set +x   # jamais de trace : le token Sysdig ne doit pas apparaître dans les logs
+
+      BASE="https://gitlab-dogen.group.echonet/gf/itg_itgp/toe_fan/aps_ops_chain/aps_toe_public/-/raw/master"
+      SYSDIG_URL="${SYSDIG_URL:-https://monitor-admin-global.svc.paas.echonet:4219/prometheus/api/v1/query}"
+
+      dir=rep; rm -rf "$dir"; mkdir -p "$dir"
+      tmpdir=$(mktemp -d); trap 'rm -rf "$tmpdir"' EXIT
+      raw="$tmpdir/raw.csv"; errlog="$tmpdir/errors.log"
+      resp_file="$tmpdir/resp.json"; part_file="$tmpdir/part.csv"
+      : > "$raw"; : > "$errlog"
+      bearer=""; pre_err=""
+
+      # Instant de référence unique : toutes les requêtes l'utilisent (paramètre time=)
+      REF_TS=$(date -u +%s)
+      EXTRACT_ISO=$(date -u -d "@$REF_TS" +%Y-%m-%dT%H:%M:%SZ)
+      echo "Extraction du $EXTRACT_ISO (instant de référence : $REF_TS)"
+
+      # ---------------------------------------------------------------
+      # 0. Validation de la configuration (valeurs injectées dans du PromQL)
+      # ---------------------------------------------------------------
+      for v in LABEL_CLUSTER LABEL_NS LABEL_POD LABEL_CONTAINER APCODE_PROM_LABEL REQ_METRIC PHASE_METRIC NS_LABELS_METRIC; do
+        printf '%s' "${!v}" | grep -Eq '^[A-Za-z_:][A-Za-z0-9_:]*$' || { echo "ERREUR : variable $v invalide"; exit 1; }
+      done
+      for v in REQ_CPU_SEL REQ_MEM_SEL; do
+        printf '%s' "${!v}" | grep -Eq '^[A-Za-z_][A-Za-z0-9_]*=~?"[^"\\]*"$' || { echo "ERREUR : variable $v invalide"; exit 1; }
+      done
+      case "$NS_REGEX" in *\"*|*\\*) echo "ERREUR : NS_REGEX invalide"; exit 1;; esac
+
+      # ---------------------------------------------------------------
+      # 1. Référentiels et sélection des clusters
+      # ---------------------------------------------------------------
+      fetch() {  # $1 = URL, $2 = fichier de sortie
+        curl -sS -f --noproxy '*' --connect-timeout 10 --max-time 60 --retry 3 --retry-delay 2 -o "$2" "$1" \
+          || { echo "ERREUR : téléchargement impossible : $(basename "$1")"; exit 1; }
+      }
+      fetch "$BASE/correspondance" "$tmpdir/correspondance"
+      fetch "$BASE/clusters.json"  "$tmpdir/clusters.json"
+      jq -e . "$tmpdir/clusters.json" >/dev/null || { echo "ERREUR : clusters.json invalide"; exit 1; }
+
+      # On garde les tirets du nom de cluster : tout ce qui suit les 2 premiers champs
+      cluster="${NCLUSTER#*-}"; cluster="${cluster#*-}"
+
+      jq -r --arg env "$NENV" --arg id "$NACCOUNT" --arg cl "$cluster" '
+        .env[]
+        | select($id == "all" or .id == $id)
+        | .id as $a
+        | .clusters[]
+        | select($env == "all" or .env == $env)
+        | select(((.env // "") | test("PREZI")) | not)
+        | select($cl == "all" or .name == $cl)
+        | [$a, .name, (.env // "NA")] | join(";")' "$tmpdir/clusters.json" | sort -u > "$tmpdir/clusters.all"
+
+      # Les identifiants sont injectés dans du PromQL : on écarte (et on signale) les valeurs inattendues
+      grep -E '^[A-Za-z0-9._-]+;[A-Za-z0-9._-]+;[^";\\]*$' "$tmpdir/clusters.all" > "$tmpdir/clusters.csv" || true
+      nb_inv=$(( $(wc -l < "$tmpdir/clusters.all") - $(wc -l < "$tmpdir/clusters.csv") ))
+      if [ "$nb_inv" -gt 0 ]; then echo "*;SELECTION;ENTREES_INVALIDES_$nb_inv" >> "$errlog"; fi
+      if [ ! -s "$tmpdir/clusters.csv" ]; then echo "ERREUR : aucun cluster sélectionné (NENV=$NENV NACCOUNT=$NACCOUNT NCLUSTER=$NCLUSTER)"; exit 1; fi
+      echo "Clusters retenus : $(wc -l < "$tmpdir/clusters.csv")"
+      cut -d';' -f1 "$tmpdir/clusters.csv" | sort -u > "$tmpdir/accounts"
+
+      # ---------------------------------------------------------------
+      # 2. Token Sysdig : correspondance EXACTE sur l'identifiant de compte
+      #    Format attendu de $SYSDIG_MONITORING_TOKEN : <compte>XXX<token>_<compte>XXX<token>...
+      #    Codes retour : 0 ok, 2 absent, 3 ambigu (plusieurs), 4 vide
+      # ---------------------------------------------------------------
+      get_token() {
+        printf '%s' "${SYSDIG_MONITORING_TOKEN:-}" | tr '_' '\n' | awk -v a="$1" '
+          { i = index($0, "XXX"); if (i > 1 && substr($0, 1, i - 1) == a) { n++; t = substr($0, i + 3) } }
+          END { if (n == 1 && t != "") { print t; exit 0 } if (n == 0) exit 2; if (n > 1) exit 3; exit 4 }'
+      }
+
+      # ---------------------------------------------------------------
+      # 3. Appels API Sysdig (token jamais en argument de commande)
+      # ---------------------------------------------------------------
+      api() {  # $1 = PromQL ; corps dans $resp_file ; motif d'échec dans $api_err
+        api_err=""; local code
+        code=$(printf 'header = "Authorization: Bearer %s"\n' "$bearer" \
+          | curl -sS --config - -G --noproxy '*' --connect-timeout 10 --max-time "$CURL_MAX_TIME" \
+              --retry 3 --retry-delay 3 \
+              --data-urlencode "query=$1" --data-urlencode "time=$REF_TS" \
+              -o "$resp_file" -w '%{http_code}' "$SYSDIG_URL" 2>/dev/null) || { api_err="CURL_ERREUR"; return 1; }
+        if [ "$code" != "200" ]; then api_err="HTTP_$code"; return 1; fi
+        if ! jq -e '.status == "success" and .data.resultType == "vector"' "$resp_file" >/dev/null 2>&1; then
+          api_err="REPONSE_INVALIDE"; return 1
+        fi
+      }
+
+      query_vec() {  # $1 = métrique logique, $2 = PromQL, $3 = label à lire à la place de la valeur
+        local m="$1" n kept
+        if ! api "$2"; then echo "$account;$m;$api_err" >> "$errlog"; return 0; fi
+        n=$(jq '.data.result | length' "$resp_file")
+        if [ "$n" -eq 0 ]; then echo "$account;$m;VIDE" >> "$errlog"; return 0; fi
+        jq -r --arg m "$m" --arg a "$account" --arg lc "$LABEL_CLUSTER" --arg ln "$LABEL_NS" --arg f "${3:-}" '
+          .data.result[]
+          | (if $f == "" then (.value[1] | tostring) else (.metric[$f] // "") end) as $v
+          | select((.metric[$lc] // "") != "" and (.metric[$ln] // "") != "" and $v != "")
+          | select($f != "" or ($v | test("^[0-9]+([.][0-9]+)?([eE][+-]?[0-9]+)?$")))
+          | select($f == "" or ($v | test("^[A-Za-z0-9._-]+$")))
+          | [$m, $a, .metric[$lc], .metric[$ln], $v] | join(";")' "$resp_file" > "$part_file"
+        kept=$(wc -l < "$part_file")
+        cat "$part_file" >> "$raw"
+        if [ "$kept" -lt "$n" ]; then echo "$account;$m;VALEURS_ECARTEES_$((n - kept))_SUR_$n" >> "$errlog"; fi
+      }
+
+      count_series() {  # $1 = count(...) ; imprime la valeur (vide si résultat vide) ; code 1 si échec API
+        api "$1" || return 1
+        jq -r '.data.result[0].value[1] // empty' "$resp_file"
+      }
+
+      # Garde-fou : un label manquant fausserait silencieusement le dédoublonnage (sous-comptage)
+      check_label() {  # $1 = métrique, $2 = sélecteurs, $3 = label requis ; 0 = ok/non vérifiable, 1 = problème (motif dans $pre_err)
+        local tot with
+        tot=$(count_series "count(${1}{${2}})") || return 0
+        if [ -z "$tot" ]; then pre_err="METRIQUE_ABSENTE_$1"; return 1; fi
+        with=$(count_series "count(${1}{${2},${3}!=\"\"})") || return 0
+        if [ "${with:-0}" != "$tot" ]; then pre_err="LABEL_ABSENT_$3"; return 1; fi
+        return 0
+      }
+
+      # Requests à l'instant T : dédoublonnage par pod/conteneur (max) AVANT la somme par namespace,
+      # sans compter les pods terminés (Succeeded/Failed) si POD_PHASE_FILTER=true
+      req_query() {  # $1 = sélecteur de ressource
+        local inner="(${REQ_METRIC}{${sel_base},$1})"
+        if [ "$POD_PHASE_FILTER" = "true" ]; then
+          inner="${inner} * on(${LABEL_CLUSTER},${LABEL_NS},${LABEL_POD}) group_left() (max by (${LABEL_CLUSTER},${LABEL_NS},${LABEL_POD}) (${PHASE_METRIC}{${sel_base},phase=~\"Pending|Running\"} == 1))"
+        fi
+        echo "sum by (${LABEL_CLUSTER},${LABEL_NS}) (max by (${LABEL_CLUSTER},${LABEL_NS},${LABEL_POD},${LABEL_CONTAINER}) (${inner}))"
+      }
+
+      # ---------------------------------------------------------------
+      # 4. Extraction : une passe par compte
+      # ---------------------------------------------------------------
+      while read -r account; do
+        echo "== compte $account"
+        rc=0; bearer=$(get_token "$account") || rc=$?
+        case "$rc" in
+          0) ;;
+          2) echo "$account;*;TOKEN_ABSENT"   >> "$errlog"; bearer=""; continue ;;
+          3) echo "$account;*;TOKEN_AMBIGU"   >> "$errlog"; bearer=""; continue ;;
+          *) echo "$account;*;TOKEN_INVALIDE" >> "$errlog"; bearer=""; continue ;;
+        esac
+        if ! printf '%s' "$bearer" | grep -Eq '^[A-Za-z0-9._~+/=-]+$'; then
+          echo "$account;*;TOKEN_INVALIDE" >> "$errlog"; bearer=""; continue
+        fi
+
+        clist=$(awk -F';' -v a="$account" '$1 == a {print $2}' "$tmpdir/clusters.csv" | paste -sd'|' -)
+        sel_base="${LABEL_CLUSTER}=~\"${clist}\",${LABEL_NS}=~\"${NS_REGEX}\""
+
+        labels_ok=1; pre_err=""
+        check_label "$REQ_METRIC" "${sel_base},${REQ_CPU_SEL}" "$LABEL_CONTAINER" || labels_ok=0
+        if [ "$labels_ok" = 1 ]; then check_label "$REQ_METRIC" "${sel_base},${REQ_CPU_SEL}" "$LABEL_POD" || labels_ok=0; fi
+        if [ "$labels_ok" = 1 ] && [ "$POD_PHASE_FILTER" = "true" ]; then
+          check_label "$PHASE_METRIC" "$sel_base" "$LABEL_POD" || labels_ok=0
+        fi
+
+        if [ "$labels_ok" = 1 ]; then
+          query_vec CPU_REQ "$(req_query "$REQ_CPU_SEL")"
+          query_vec MEM_REQ "$(req_query "$REQ_MEM_SEL")"
+        else
+          echo "$account;CPU_REQ;$pre_err" >> "$errlog"
+          echo "$account;MEM_REQ;$pre_err" >> "$errlog"
+        fi
+        query_vec APCODE "max by (${LABEL_CLUSTER},${LABEL_NS},${APCODE_PROM_LABEL}) (${NS_LABELS_METRIC}{${sel_base}})" "$APCODE_PROM_LABEL"
+        bearer=""
+      done < "$tmpdir/accounts"
+      unset bearer
+
+      # ---------------------------------------------------------------
+      # 5. Consolidation : jamais de 0 par défaut, NA + statut explicite
+      # ---------------------------------------------------------------
+      awk -F';' -v OFS=';' -v dec="$DECIMAL_SEP" -v ts="$EXTRACT_ISO" \
+          -v fcl="$tmpdir/clusters.csv" -v fco="$tmpdir/correspondance" -v ferr="$errlog" \
+          -v fout="$tmpdir/rows.csv" -v fsum="$tmpdir/syn.csv" '
+        function fmt(x, f,  s) { s = sprintf(f, x); if (dec != ".") gsub(/\./, dec, s); return s }
+        function badr(a, m)    { if ((a SUBSEP m) in bad) return bad[a, m]; if ((a SUBSEP "*") in bad) return bad[a, "*"]; return "" }
+        function addflag(f)    { flags = (flags == "") ? f : flags "|" f }
+        { sub(/\r$/, "") }
+        FILENAME == fcl  { sel[$1, $2] = $3; next }
+        FILENAME == fco  { if (NF >= 3) { known[$1] = 1; tribe[$1] = $2; dom[$1] = $3 } next }
+        FILENAME == ferr { if ($3 !~ /^VALEURS_ECARTEES/) bad[$1, $2] = $3; next }
+        {
+          if (!(($2, $3) in sel)) next                      # hors sélection
+          k = $2 SUBSEP $3 SUBSEP $4; nsset[k] = 1
+          if ($1 == "APCODE") {
+            if ((k in ap) && ap[k] != $5) conflict[k] = 1; else ap[k] = $5
+          } else {
+            if (($1, k) in v) dup[k] = 1; else v[$1, k] = $5   # doublon : on garde la 1re valeur et on signale
+          }
+        }
+        END {
+          M = 1048576
+          for (k in nsset) {
+            split(k, p, SUBSEP); a = p[1]; c = p[2]; n = p[3]; ck = a SUBSEP c
+            flags = ""
+            cpu = "NA"; r = badr(a, "CPU_REQ")
+            if (r != "") addflag("CPU_" r)
+            else if (("CPU_REQ", k) in v) { cv = v["CPU_REQ", k] + 0; cpu = fmt(cv, "%.3f"); sc[ck] += cv; nc[ck]++ }
+            else addflag("CPU_NA")
+            mem = "NA"; r = badr(a, "MEM_REQ")
+            if (r != "") addflag("MEM_" r)
+            else if (("MEM_REQ", k) in v) { mv = v["MEM_REQ", k] / M; mem = fmt(mv, "%.0f"); sm[ck] += mv; nm[ck]++ }
+            else addflag("MEM_NA")
+            apc = "NA"; tb = "NA"; dm = "NA"; r = badr(a, "APCODE")
+            if (k in conflict)                       addflag("APCODE_CONFLIT")
+            else if (r != "")                        addflag("APCODE_" r)
+            else if (!(k in ap))                     addflag("APCODE_NA")
+            else if (ap[k] ~ /[^A-Za-z0-9._-]/)      addflag("APCODE_INVALIDE")
+            else { apc = ap[k]; if (apc in known) { tb = tribe[apc]; dm = dom[apc] } else addflag("REFERENTIEL_ABSENT") }
+            if (k in dup) addflag("DOUBLON_METRIQUE")
+            nns[ck]++
+            if (cpu == "NA") ncna[ck]++
+            if (mem == "NA") nmna[ck]++
+            if (apc == "NA") napc[ck]++
+            print a, c, sel[a, c], n, apc, tb, dm, cpu, mem, (flags == "" ? "OK" : flags), ts >> fout
+          }
+          for (key in sel) {
+            split(key, q, SUBSEP); a = q[1]; c = q[2]; ck = a SUBSEP c
+            rcpu = badr(a, "CPU_REQ"); rmem = badr(a, "MEM_REQ"); rapc = badr(a, "APCODE")
+            if (nns[ck] == 0) {                                  # cluster sans aucun namespace exploitable
+              flags = ""; addflag("AUCUN_NAMESPACE")
+              if (rcpu != "") addflag("CPU_" rcpu)
+              if (rmem != "") addflag("MEM_" rmem)
+              if (rapc != "") addflag("APCODE_" rapc)
+              print a, c, sel[a, c], "NA", "NA", "NA", "NA", "NA", "NA", flags, ts >> fout
+            }
+            fl = (nns[ck] == 0) ? "|AUCUN_NAMESPACE" : ""
+            if (rcpu != "") { ctot = "NA"; cna = "NA"; fl = fl "|CPU_" rcpu }
+            else {
+              ctot = (nc[ck] > 0) ? fmt(sc[ck], "%.3f") : "NA"; cna = ncna[ck] + 0
+              if (nns[ck] > 0 && nc[ck] == 0) fl = fl "|CPU_AUCUNE_VALEUR"
+              else if (cna > 0) fl = fl "|CPU_NA_" cna "_NS"
+            }
+            if (rmem != "") { mtot = "NA"; mna = "NA"; fl = fl "|MEM_" rmem }
+            else {
+              mtot = (nm[ck] > 0) ? fmt(sm[ck], "%.0f") : "NA"; mna = nmna[ck] + 0
+              if (nns[ck] > 0 && nm[ck] == 0) fl = fl "|MEM_AUCUNE_VALEUR"
+              else if (mna > 0) fl = fl "|MEM_NA_" mna "_NS"
+            }
+            if (rapc != "") { ana = "NA"; fl = fl "|APCODE_" rapc }
+            else { ana = napc[ck] + 0; if (ana > 0) fl = fl "|APCODE_NA_" ana "_NS" }
+            print a, c, sel[a, c], nns[ck] + 0, cna, mna, ana, ctot, mtot, (fl == "" ? "OK" : substr(fl, 2)), ts >> fsum
+          }
+        }' "$tmpdir/clusters.csv" "$tmpdir/correspondance" "$errlog" "$raw"
+
+      # ---------------------------------------------------------------
+      # 6. Fichiers de sortie : UTF-8 avec BOM, séparateur ";" et décimale "," (Excel FR)
+      # ---------------------------------------------------------------
+      touch "$tmpdir/rows.csv" "$tmpdir/syn.csv"
+      out_ns="$dir/requests-par-namespace.csv"; out_syn="$dir/synthese-par-cluster.csv"; out_ano="$dir/anomalies.csv"
+
+      printf '\xEF\xBB\xBF' > "$out_ns"
+      echo "compte;cluster IKS;environnement;namespace;APCODE;TRIBE;DOMAIN;CPU requests (vCPU);Mémoire requests (MiB);statut;horodatage extraction (UTC)" >> "$out_ns"
+      LC_ALL=C sort -t';' -k1,1 -k2,2 -k4,4 "$tmpdir/rows.csv" >> "$out_ns"
+
+      printf '\xEF\xBB\xBF' > "$out_syn"
+      echo "compte;cluster IKS;environnement;nb namespaces;nb namespaces CPU NA;nb namespaces mémoire NA;nb namespaces APCODE NA;CPU requests total (vCPU);Mémoire requests total (MiB);statut;horodatage extraction (UTC)" >> "$out_syn"
+      LC_ALL=C sort -t';' -k1,1 -k2,2 "$tmpdir/syn.csv" >> "$out_syn"
+
+      printf '\xEF\xBB\xBF' > "$out_ano"
+      echo "compte;métrique;motif" >> "$out_ano"
+      cat "$errlog" >> "$out_ano"
+
+      nb_rows=$(wc -l < "$tmpdir/rows.csv")
+      nb_ko=$(awk -F';' '$10 != "OK"' "$tmpdir/rows.csv" | wc -l)
+      echo "Lignes namespace : $nb_rows dont $nb_ko avec statut différent de OK"
+      if [ "$NDEBUG" = "TRUE" ]; then
+        echo "--- synthèse ---"; cat "$tmpdir/syn.csv"
+        echo "--- aperçu namespaces ---"; head -20 "$tmpdir/rows.csv"
+      fi
+
+      # ---------------------------------------------------------------
+      # 7. Contrôle final : APCODE manquant = avertissement ; CPU/mémoire/token incomplet = échec si STRICT
+      # ---------------------------------------------------------------
+      if [ -s "$errlog" ]; then
+        echo "ANOMALIES (compte;métrique;motif) :"; cat "$errlog"
+        if [ "$STRICT" = "true" ] && grep -Ev ';APCODE;' "$errlog" | grep -q .; then
+          echo "ERREUR : extraction CPU/mémoire incomplète (voir rep/anomalies.csv)"; exit 1
+        fi
+      fi
+      if [ "$nb_ko" -gt 0 ]; then echo "ATTENTION : $nb_ko ligne(s) à vérifier (colonne statut)"; fi
+      echo "Script terminé"
+  artifacts:
+    when: always
+    paths:
+      - rep/
+    expire_in: 14 days
+
